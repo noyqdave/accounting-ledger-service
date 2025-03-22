@@ -19,5 +19,33 @@ public class Transaction {
         this.type = type;
     }
 
+    public Transaction(UUID id, LocalDateTime date, BigDecimal amount, String description, TransactionType type) {
+        this.id = id;
+        this.date = date;
+        this.amount = amount;
+        this.description = description;
+        this.type = type;
+    }
+
     // Getters
+
+    public UUID getId() {
+        return id;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
 }

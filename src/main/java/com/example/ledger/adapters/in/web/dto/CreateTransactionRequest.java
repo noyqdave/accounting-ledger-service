@@ -1,4 +1,4 @@
-package com.example.ledger.adapters.in.web;
+package com.example.ledger.adapters.in.web.dto;
 
 import com.example.ledger.domain.model.TransactionType;
 
