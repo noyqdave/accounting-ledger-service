@@ -1,0 +1,9 @@
+### Create a transaction
+POST http://localhost:8080/transactions
+Content-Type: application/json
+
+{
+  "amount": 125.00,
+  "description": "March cloud hosting",
+  "type": "EXPENSE"
+}
