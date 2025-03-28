@@ -2,6 +2,7 @@ package com.example.ledger.adapters.in.web;
 
 import com.example.ledger.application.usecase.CreateTransactionUseCase;
 import com.example.ledger.application.usecase.GetAllTransactionsUseCase;
+import com.example.ledger.config.FeatureFlags;
 import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.domain.model.TransactionType;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,6 +36,9 @@ class TransactionControllerTest {
     @MockBean
     private CreateTransactionUseCase createTransactionUseCase;
 
+    @MockBean
+    private FeatureFlags featureFlags;
+
     @Test
     void shouldReturnListOfTransactions() throws Exception {
         Transaction t1 = new Transaction(
@@ -50,7 +57,8 @@ class TransactionControllerTest {
         );
 
         when(getAllTransactionsUseCase.getAll()).thenReturn(List.of(t1, t2));
-
+        // Arrange
+        when(featureFlags.isGetAllTransactionsEnabled()).thenReturn(true);
         mockMvc.perform(get("/transactions"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -60,6 +68,8 @@ class TransactionControllerTest {
 
     @Test
     void shouldCreateTransaction() throws Exception {
+        // Arrange
+        when(featureFlags.isCreateTransactionEnabled()).thenReturn(true);
         Transaction savedTransaction = new Transaction(
                 UUID.randomUUID(),
                 LocalDateTime.now(),
@@ -89,5 +99,37 @@ class TransactionControllerTest {
                 .andExpect(jsonPath("$.description").value("Cloud hosting"))
                 .andExpect(jsonPath("$.amount").value(125.00))
                 .andExpect(jsonPath("$.type").value("EXPENSE"));
+    }
+
+    @Test
+    void shouldReturn403WhenFeatureFlagIsDisabled() throws Exception {
+        // Arrange
+        when(featureFlags.isCreateTransactionEnabled()).thenReturn(false);
+
+        String requestJson = """
+        {
+          "amount": 100.00,
+          "description": "Blocked by feature flag",
+          "type": "EXPENSE"
+        }
+        
+        
+        """;
+
+        // Act + Assert
+        mockMvc.perform(post("/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldReturn403WhenGetAllTransactionsFeatureFlagIsDisabled() throws Exception {
+        // Arrange
+        when(featureFlags.isGetAllTransactionsEnabled()).thenReturn(false);
+
+        // Act + Assert
+        mockMvc.perform(get("/transactions"))
+                .andExpect(status().isForbidden());
     }
 }

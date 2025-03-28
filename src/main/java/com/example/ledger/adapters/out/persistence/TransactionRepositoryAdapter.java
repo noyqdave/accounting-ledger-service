@@ -5,6 +5,8 @@ import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.domain.port.TransactionRepositoryPort;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
 
@@ -19,6 +21,13 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
         TransactionEntity entity = mapToEntity(transaction);
         TransactionEntity saved = jpaRepository.save(entity);
         return mapToDomain(saved);
+    }
+
+    @Override
+    public List<Transaction> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(this::mapToDomain)
+                .toList();
     }
 
     private TransactionEntity mapToEntity(Transaction tx) {

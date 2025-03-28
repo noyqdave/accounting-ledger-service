@@ -12,6 +12,14 @@ public class Transaction {
     private final TransactionType type;
 
     public Transaction(BigDecimal amount, String description, TransactionType type) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description must not be null or empty");
+        }
+
+
         this.id = UUID.randomUUID();
         this.date = LocalDateTime.now();
         this.amount = amount;

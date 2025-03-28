@@ -1,0 +1,5 @@
+feature:
+  create-transaction:
+    enabled: false
+  get-all-transactions:
+    enabled: false
