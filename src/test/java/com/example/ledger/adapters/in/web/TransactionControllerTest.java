@@ -2,13 +2,17 @@ package com.example.ledger.adapters.in.web;
 
 import com.example.ledger.application.usecase.CreateTransactionUseCase;
 import com.example.ledger.application.usecase.GetAllTransactionsUseCase;
+import com.example.ledger.config.FeatureFlagAspect;
 import com.example.ledger.config.FeatureFlags;
 import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.domain.model.TransactionType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,7 +29,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(TransactionController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(FeatureFlagAspect.class)
 class TransactionControllerTest {
 
     @Autowired

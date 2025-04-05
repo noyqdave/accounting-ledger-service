@@ -3,6 +3,7 @@ package com.example.ledger.adapters.in.web;
 import com.example.ledger.adapters.in.web.dto.CreateTransactionRequest;
 import com.example.ledger.application.usecase.CreateTransactionUseCase;
 import com.example.ledger.application.usecase.GetAllTransactionsUseCase;
+import com.example.ledger.config.FeatureEnabled;
 import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.config.FeatureFlags;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,6 @@ public class TransactionController {
 
     private final CreateTransactionUseCase createTransactionUseCase;
     private final GetAllTransactionsUseCase getAllTransactionsUseCase;
-
     private final FeatureFlags featureFlags;
 
     public TransactionController(CreateTransactionUseCase createTransactionUseCase,
@@ -27,11 +27,10 @@ public class TransactionController {
         this.featureFlags = featureFlags;
     }
 
+    @FeatureEnabled("create-transaction")
     @PostMapping
     public ResponseEntity<Transaction> createTransaction(@RequestBody CreateTransactionRequest request) {
-        if (!featureFlags.isCreateTransactionEnabled()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+
         // Convert DTO to domain model
         Transaction transaction = new Transaction(
                 request.getAmount(),
@@ -43,11 +42,10 @@ public class TransactionController {
         return ResponseEntity.ok(savedTransaction);
     }
 
+    @FeatureEnabled("get-all-transactions")
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
-        if (!featureFlags.isGetAllTransactionsEnabled()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+
         List<Transaction> transactions = getAllTransactionsUseCase.getAll();
         return ResponseEntity.ok(transactions);
     }
