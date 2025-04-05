@@ -17,14 +17,12 @@ public class TransactionController {
 
     private final CreateTransactionUseCase createTransactionUseCase;
     private final GetAllTransactionsUseCase getAllTransactionsUseCase;
-    private final FeatureFlags featureFlags;
 
     public TransactionController(CreateTransactionUseCase createTransactionUseCase,
-                                 GetAllTransactionsUseCase getAllTransactionsUseCase,
-                                 FeatureFlags featureFlags) {
+                                 GetAllTransactionsUseCase getAllTransactionsUseCase) {
         this.createTransactionUseCase = createTransactionUseCase;
         this.getAllTransactionsUseCase = getAllTransactionsUseCase;
-        this.featureFlags = featureFlags;
+
     }
 
     @FeatureEnabled("create-transaction")
