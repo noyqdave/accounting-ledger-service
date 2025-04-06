@@ -1,8 +1,8 @@
 feature:
   create-transaction:
-    enabled: false
+    enabled: true
   get-all-transactions:
-    enabled: false
+    enabled: true
 
 management:
   endpoints:
