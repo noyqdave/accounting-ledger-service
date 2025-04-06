@@ -26,20 +26,18 @@ import static org.mockito.Mockito.*;
 class GetAllTransactionsServiceTest {
 
     private TransactionRepositoryPort repository;
-    private FeatureFlags featureFlags;
+
     private GetAllTransactionsService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(TransactionRepositoryPort.class);
-        featureFlags = mock(FeatureFlags.class);
-        service = new GetAllTransactionsService(repository, featureFlags);
+        service = new GetAllTransactionsService(repository);
     }
 
     @Test
     void shouldReturnListOfTransactionsWhenFeatureIsEnabled() {
         // Arrange
-        when(featureFlags.isGetAllTransactionsEnabled()).thenReturn(true);
 
         Transaction t1 = new Transaction(UUID.randomUUID(), LocalDateTime.now(), new BigDecimal("10.00"), "Test", TransactionType.EXPENSE);
         Transaction t2 = new Transaction(UUID.randomUUID(), LocalDateTime.now(), new BigDecimal("20.00"), "Test2", TransactionType.REVENUE);
@@ -54,13 +52,4 @@ class GetAllTransactionsServiceTest {
         verify(repository, times(1)).findAll();
     }
 
-    @Test
-    void shouldThrowExceptionWhenFeatureIsDisabled() {
-        when(featureFlags.isGetAllTransactionsEnabled()).thenReturn(false);
-
-        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> service.getAll());
-        assertEquals("Fetching all transactions is currently disabled", ex.getMessage());
-
-        verify(repository, never()).findAll();
-    }
 }

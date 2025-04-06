@@ -11,18 +11,14 @@ import java.util.List;
 public class GetAllTransactionsService implements GetAllTransactionsUseCase {
 
     private final TransactionRepositoryPort repository;
-    private final FeatureFlags featureFlags;
 
-    public GetAllTransactionsService(TransactionRepositoryPort repository, FeatureFlags featureFlags) {
+    public GetAllTransactionsService(TransactionRepositoryPort repository) {
         this.repository = repository;
-        this.featureFlags = featureFlags;
     }
 
     @Override
     public List<Transaction> getAll() {
-        if (!featureFlags.isGetAllTransactionsEnabled()) {
-            throw new IllegalStateException("Fetching all transactions is currently disabled");
-        }
+
         return repository.findAll();
     }
 }
