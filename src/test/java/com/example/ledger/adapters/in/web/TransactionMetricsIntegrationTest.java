@@ -13,7 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
-        "feature.create-transaction.enabled=true"
+        "feature.create-transaction.enabled=true",
+        "feature.get-all-transactions.enabled=true"
 })
 class TransactionMetricsIntegrationTest {
 
@@ -36,6 +37,18 @@ class TransactionMetricsIntegrationTest {
 
         // 2. Query the metrics endpoint
         mockMvc.perform(get("/actuator/metrics/transactions.created"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.measurements[0].value").value(1.0));
+    }
+
+    @Test
+    void shouldIncrementMetricWhenTransactionsAreFetched() throws Exception {
+        // 1. Trigger metric by calling the controller
+        mockMvc.perform(get("/transactions"))
+                .andExpect(status().isOk());
+
+        // 2. Query the metrics endpoint
+        mockMvc.perform(get("/actuator/metrics/transactions.fetched"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.measurements[0].value").value(1.0));
     }
