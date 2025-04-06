@@ -1,11 +1,14 @@
 package com.example.ledger.application.usecase;
 
+import com.example.ledger.config.FeatureFlagAspect;
 import com.example.ledger.config.FeatureFlags;
 import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.domain.model.TransactionType;
 import com.example.ledger.domain.port.TransactionRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +18,11 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@TestPropertySource(properties = {
+        "feature.create-transaction.enabled=true",
+        "feature.get-all-transactions.enabled=true"
+})
+@Import(FeatureFlagAspect.class)
 class GetAllTransactionsServiceTest {
 
     private TransactionRepositoryPort repository;
