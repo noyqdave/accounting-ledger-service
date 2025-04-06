@@ -3,3 +3,9 @@ feature:
     enabled: false
   get-all-transactions:
     enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "metrics"
