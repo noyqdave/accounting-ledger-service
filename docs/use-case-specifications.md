@@ -17,23 +17,25 @@
 ### Basic Flow
 1. **Actor initiates transaction creation**: The actor sends a POST request to `/transactions` endpoint with transaction data including amount, description, and type (EXPENSE or REVENUE).
 
-2. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled. If enabled, processing continues to step 3. If disabled, the system follows alternative flow A1.
+2. **System validates request format**: The system validates that the request body contains valid JSON. If valid, processing continues to step 3. If malformed, the system follows alternative flow A5.
 
-3. **System tracks metrics**: The system records a "transactions.created" metric for monitoring purposes.
+3. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled. If enabled, processing continues to step 4. If disabled, the system follows alternative flow A1.
 
-4. **System validates input data**: The system validates the provided transaction data:
+4. **System tracks metrics**: The system records a "transactions.created" metric for monitoring purposes.
+
+5. **System validates input data**: The system validates the provided transaction data:
    - Amount must be greater than zero
    - Description must not be null or empty
    - Transaction type must be either EXPENSE or REVENUE
 
-5. **System creates domain object**: The system creates a new Transaction domain object with:
+6. **System creates domain object**: The system creates a new Transaction domain object with:
    - Generated UUID as identifier
    - Current timestamp as creation date
    - Validated amount, description, and type
 
-6. **System persists transaction**: The system saves the transaction to the database through the repository layer.
+7. **System persists transaction**: The system saves the transaction to the database through the repository layer.
 
-7. **System returns success response**: The system returns HTTP 200 with the created transaction object including the assigned ID and timestamp.
+8. **System returns success response**: The system returns HTTP 200 with the created transaction object including the assigned ID and timestamp.
 
 ### Alternative Flows
 
@@ -74,9 +76,18 @@
   5. System returns HTTP 500 Internal Server Error with generic error message
 - **Postcondition**: No transaction is created
 
+#### A5: Malformed Request
+- **Trigger**: Request body contains invalid JSON syntax
+- **Steps**:
+  1. System attempts to parse JSON request body
+  2. JSON parsing fails due to malformed syntax
+  3. System throws JSON parsing exception
+  4. Global exception handler catches the exception
+  5. System returns HTTP 400 Bad Request with message about JSON syntax error
+- **Postcondition**: No transaction is created
+
 ### Exception Flows
 - **System Unavailable**: If the application server is down, the request will fail with connection error
-- **Malformed Request**: If the request body is not valid JSON, the system returns HTTP 400 Bad Request
 
 ---
 
@@ -250,20 +261,24 @@
 ### Basic Flow
 1. **Actor sends invalid request**: The actor sends a request with invalid data (malformed JSON, missing required fields, etc.).
 
-2. **System validates request**: The system attempts to parse and validate the incoming request.
+2. **System validates request format**: The system attempts to parse the JSON request body. If valid, processing continues to step 3. If malformed, the system follows alternative flow A1.
 
-3. **System detects validation errors**: The system identifies specific validation failures.
+3. **System validates request structure**: The system validates the request structure and required fields. If valid, processing continues to step 4. If invalid, the system follows alternative flow A2.
 
-4. **System returns error response**: The system returns HTTP 400 Bad Request with detailed error information about what was invalid.
+4. **System validates field types**: The system validates field data types. If valid, processing continues to step 5. If invalid, the system follows alternative flow A3.
+
+5. **System returns error response**: The system returns HTTP 400 Bad Request with detailed error information about what was invalid.
 
 ### Alternative Flows
 
 #### A1: Malformed JSON
 - **Trigger**: Request body contains invalid JSON syntax
 - **Steps**:
-  1. System attempts to parse JSON
-  2. JSON parsing fails
-  3. System returns HTTP 400 Bad Request with message about JSON syntax error
+  1. System attempts to parse JSON request body
+  2. JSON parsing fails due to malformed syntax
+  3. System throws JSON parsing exception
+  4. Global exception handler catches the exception
+  5. System returns HTTP 400 Bad Request with message about JSON syntax error
 - **Postcondition**: Request is rejected
 
 #### A2: Missing Required Fields
@@ -271,7 +286,9 @@
 - **Steps**:
   1. System validates request structure
   2. System identifies missing required fields
-  3. System returns HTTP 400 Bad Request with message listing missing fields
+  3. System throws validation exception
+  4. Global exception handler catches the exception
+  5. System returns HTTP 400 Bad Request with message listing missing fields
 - **Postcondition**: Request is rejected
 
 #### A3: Invalid Field Types
@@ -279,7 +296,9 @@
 - **Steps**:
   1. System validates field types
   2. System identifies type mismatches
-  3. System returns HTTP 400 Bad Request with message about type errors
+  3. System throws validation exception
+  4. Global exception handler catches the exception
+  5. System returns HTTP 400 Bad Request with message about type errors
 - **Postcondition**: Request is rejected
 
 ### Exception Flows
