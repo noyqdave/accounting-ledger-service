@@ -17,9 +17,9 @@
 ### Basic Flow
 1. **Actor initiates transaction creation**: The actor sends a POST request to `/transactions` endpoint with transaction data including amount, description, and type (EXPENSE or REVENUE).
 
-2. **System validates request format**: The system validates that the request body contains valid JSON. If valid, processing continues to step 3. If malformed, the system follows alternative flow A5.
+2. **System validates request format**: The system validates that the request body contains valid JSON.
 
-3. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled. If enabled, processing continues to step 4. If disabled, the system follows alternative flow A1.
+3. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled.
 
 4. **System tracks metrics**: The system records a "transactions.created" metric for monitoring purposes.
 
@@ -40,7 +40,7 @@
 ### Alternative Flows
 
 #### A1: Feature Flag Disabled
-- **Trigger**: Feature flag "create-transaction" is disabled
+- **Trigger**: In step 3, the "create-transaction" feature flag is disabled
 - **Steps**:
   1. System checks feature flag and determines it is disabled
   2. System throws FeatureFlagDisabledException
@@ -49,7 +49,7 @@
 - **Postcondition**: No transaction is created
 
 #### A2: Invalid Amount
-- **Trigger**: Amount is zero or negative
+- **Trigger**: In step 5, the amount is zero or negative
 - **Steps**:
   1. System validates amount and determines it is invalid
   2. System throws IllegalArgumentException with message "Amount must be positive"
@@ -58,7 +58,7 @@
 - **Postcondition**: No transaction is created
 
 #### A3: Empty Description
-- **Trigger**: Description is null or empty
+- **Trigger**: In step 5, the description is null or empty
 - **Steps**:
   1. System validates description and determines it is invalid
   2. System throws IllegalArgumentException with message "Description must not be null or empty"
@@ -67,7 +67,7 @@
 - **Postcondition**: No transaction is created
 
 #### A4: Database Error
-- **Trigger**: Database is unavailable or connection fails
+- **Trigger**: In step 7, the database is unavailable or connection fails
 - **Steps**:
   1. System attempts to persist transaction
   2. Database operation fails
@@ -77,7 +77,7 @@
 - **Postcondition**: No transaction is created
 
 #### A5: Malformed Request
-- **Trigger**: Request body contains invalid JSON syntax
+- **Trigger**: In step 2, the request body contains invalid JSON syntax
 - **Steps**:
   1. System attempts to parse JSON request body
   2. JSON parsing fails due to malformed syntax
@@ -107,7 +107,7 @@
 ### Basic Flow
 1. **Actor requests all transactions**: The actor sends a GET request to `/transactions` endpoint.
 
-2. **System validates feature flag**: The system checks if the "get-all-transactions" feature flag is enabled. If enabled, processing continues to step 3. If disabled, the system follows alternative flow A1.
+2. **System validates feature flag**: The system checks if the "get-all-transactions" feature flag is enabled.
 
 3. **System tracks metrics**: The system records a "transactions.fetched" metric for monitoring purposes.
 
@@ -120,7 +120,7 @@
 ### Alternative Flows
 
 #### A1: Feature Flag Disabled
-- **Trigger**: Feature flag "get-all-transactions" is disabled
+- **Trigger**: In step 2, the "get-all-transactions" feature flag is disabled
 - **Steps**:
   1. System checks feature flag and determines it is disabled
   2. System throws FeatureFlagDisabledException
@@ -129,7 +129,7 @@
 - **Postcondition**: No transactions are returned
 
 #### A2: Database Error
-- **Trigger**: Database is unavailable or query fails
+- **Trigger**: In step 4, the database is unavailable or query fails
 - **Steps**:
   1. System attempts to query database
   2. Database operation fails
@@ -139,7 +139,7 @@
 - **Postcondition**: No transactions are returned
 
 #### A3: No Transactions Found
-- **Trigger**: Database contains no transactions
+- **Trigger**: In step 4, the database contains no transactions
 - **Steps**:
   1. System queries database
   2. Database returns empty result set
@@ -261,18 +261,18 @@
 ### Basic Flow
 1. **Actor sends invalid request**: The actor sends a request with invalid data (malformed JSON, missing required fields, etc.).
 
-2. **System validates request format**: The system attempts to parse the JSON request body. If valid, processing continues to step 3. If malformed, the system follows alternative flow A1.
+2. **System validates request format**: The system attempts to parse the JSON request body.
 
-3. **System validates request structure**: The system validates the request structure and required fields. If valid, processing continues to step 4. If invalid, the system follows alternative flow A2.
+3. **System validates request structure**: The system validates the request structure and required fields.
 
-4. **System validates field types**: The system validates field data types. If valid, processing continues to step 5. If invalid, the system follows alternative flow A3.
+4. **System validates field types**: The system validates field data types.
 
 5. **System returns error response**: The system returns HTTP 400 Bad Request with detailed error information about what was invalid.
 
 ### Alternative Flows
 
 #### A1: Malformed JSON
-- **Trigger**: Request body contains invalid JSON syntax
+- **Trigger**: In step 2, the request body contains invalid JSON syntax
 - **Steps**:
   1. System attempts to parse JSON request body
   2. JSON parsing fails due to malformed syntax
@@ -282,7 +282,7 @@
 - **Postcondition**: Request is rejected
 
 #### A2: Missing Required Fields
-- **Trigger**: Request is missing required fields
+- **Trigger**: In step 3, the request is missing required fields
 - **Steps**:
   1. System validates request structure
   2. System identifies missing required fields
@@ -292,7 +292,7 @@
 - **Postcondition**: Request is rejected
 
 #### A3: Invalid Field Types
-- **Trigger**: Request contains fields with incorrect data types
+- **Trigger**: In step 4, the request contains fields with incorrect data types
 - **Steps**:
   1. System validates field types
   2. System identifies type mismatches
