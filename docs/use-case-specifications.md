@@ -86,9 +86,6 @@
   5. System returns HTTP 400 Bad Request with message about JSON syntax error
 - **Postcondition**: No transaction is created
 
-### Exception Flows
-- **System Unavailable**: If the application server is down, the request will fail with connection error
-
 ---
 
 ## UC-002: Retrieve All Transactions
@@ -147,9 +144,6 @@
   4. System returns HTTP 200 with empty list: []
 - **Postcondition**: Empty list is returned (this is considered normal operation)
 
-### Exception Flows
-- **System Unavailable**: If the application server is down, the request will fail with connection error
-
 ---
 
 ## UC-003: System Health Check
@@ -203,9 +197,6 @@
   5. System returns HTTP 503 Service Unavailable with health details
 - **Postcondition**: System is marked as unhealthy
 
-### Exception Flows
-- **Actuator Disabled**: If actuator endpoints are disabled, the request will return HTTP 404 Not Found
-
 ---
 
 ## UC-004: View API Documentation
@@ -239,9 +230,6 @@
   1. User attempts to access documentation URL
   2. System returns HTTP 404 Not Found
 - **Postcondition**: Documentation is not accessible
-
-### Exception Flows
-- **System Unavailable**: If the application server is down, the documentation will not be accessible
 
 ---
 
@@ -300,9 +288,6 @@
   4. Global exception handler catches the exception
   5. System returns HTTP 400 Bad Request with message about type errors
 - **Postcondition**: Request is rejected
-
-### Exception Flows
-- **System Unavailable**: If the application server is down, the request will fail with connection error
 
 ---
 
