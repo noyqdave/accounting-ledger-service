@@ -5,6 +5,32 @@ These BDD scenarios are derived from UC-001: Create Transaction use case, focusi
 
 ## Feature: Create Transaction
 
+### Scenario Outline: Create Transaction with Various Data Types
+**Given** I want to record a <transaction_category>  
+**And** the transaction amount is <amount>  
+**And** the transaction description is "<description>"  
+**And** the transaction type is "<type>"  
+**When** I create the transaction  
+**Then** the transaction should be recorded in the ledger  
+**And** the transaction should have a unique identifier  
+**And** the transaction should show the correct amount of <amount>  
+**And** the transaction should show the description "<description>"  
+**And** the transaction should be marked as <type_lowercase>  
+**And** the transaction should have a timestamp showing when it was created
+
+#### Examples:
+| transaction_category | amount | description | type | type_lowercase |
+|---------------------|--------|-------------|------|----------------|
+| business expense | $100.00 | Office supplies | EXPENSE | an expense |
+| business revenue | $2,500.00 | Client payment for project work | REVENUE | revenue |
+| small business expense | $99.99 | Coffee and snacks | EXPENSE | an expense |
+| recurring business expense | $1,500.00 | Monthly subscription for cloud hosting services including compute, storage, and networking resources | EXPENSE | an expense |
+| major business expense | $50,000.00 | Quarterly software license renewal | EXPENSE | an expense |
+
+---
+
+## Individual Scenarios (Alternative Format)
+
 ### Scenario 1: Successfully Create an Expense Transaction
 **Given** I want to record a business expense  
 **And** the transaction amount is $100.00  
@@ -70,26 +96,28 @@ These BDD scenarios are derived from UC-001: Create Transaction use case, focusi
 **And** the transaction should be marked as an expense  
 **And** the transaction should have a timestamp showing when it was created
 
-## Business Context
+## Scenario Outline Benefits
 
-### Transaction Types
-- **EXPENSE**: Money going out of the business (purchases, bills, operational costs)
-- **REVENUE**: Money coming into the business (sales, payments, income)
+### Advantages of Scenario Outline Format:
+- **DRY Principle**: Single scenario template with multiple data examples
+- **Easy Maintenance**: Add new test cases by adding rows to the examples table
+- **Clear Coverage**: Easy to see all test variations at a glance
+- **Parameterized Testing**: BDD tools can execute each row as a separate test
+- **Business Focus**: Examples table shows business context for each test case
 
-### Amount Ranges
-- **Small amounts**: $0.01 to $99.99 (daily expenses, small purchases)
-- **Medium amounts**: $100.00 to $2,500.00 (regular business expenses, monthly costs)
-- **Large amounts**: $2,500.00+ (major purchases, quarterly/annual expenses)
+### Test Coverage:
+- **Transaction Types**: Both EXPENSE and REVENUE
+- **Amount Ranges**: Small ($99.99) to Large ($50,000.00)
+- **Description Lengths**: Short to detailed descriptions
+- **Business Context**: Different types of business transactions
 
-### Description Examples
-- **Short**: "Coffee", "Lunch", "Taxi"
-- **Medium**: "Office supplies", "Client meeting", "Software license"
-- **Detailed**: "Monthly subscription for cloud hosting services including compute, storage, and networking resources"
+### Mapping to Use Case:
+- **Scenario Outline**: Tests the complete basic flow (steps 1-8) of UC-001
+- **Each Example**: Validates the same business process with different data
+- **Outcomes**: All examples should result in successful transaction creation
 
-## Business Rules
-- All transactions must have a positive amount
-- All transactions must have a description
-- Each transaction gets a unique identifier
-- Each transaction is timestamped when created
-- Transactions are permanently recorded in the ledger
-- The system should handle various amount formats and description lengths
+## Notes
+- These scenarios test the basic flow (happy path) of UC-001: Create Transaction
+- Business rules and constraints are defined in the use case specifications
+- Scenario outline format provides comprehensive coverage with minimal duplication
+- Each example row represents a complete test case that can be executed independently
