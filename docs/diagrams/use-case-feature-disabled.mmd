@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant Client
+    participant Controller as TransactionController
+    participant FFA as FeatureFlagAspect
+    participant GEH as GlobalExceptionHandler
+    
+    Client->>Controller: POST /transactions<br/>{amount: 100.00, description: "Office supplies", type: "EXPENSE"}
+    
+    Note over Controller: Feature Flag Check
+    Controller->>FFA: Check "create-transaction" flag
+    FFA->>FFA: Feature disabled in configuration
+    FFA->>GEH: Throw FeatureFlagDisabledException
+    
+    Note over GEH: Exception Handling
+    GEH->>GEH: Log exception details
+    GEH->>GEH: Create error response
+    GEH-->>Client: HTTP 403 Forbidden<br/>{"error": "Feature 'create-transaction' is disabled"}

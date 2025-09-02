@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant Client
+    participant Controller as TransactionController
+    participant FFA as FeatureFlagAspect
+    participant MA as MetricsAspect
+    participant Domain as Transaction Domain
+    participant GEH as GlobalExceptionHandler
+    
+    Client->>Controller: POST /transactions<br/>{amount: -50.00, description: "", type: "EXPENSE"}
+    
+    Note over Controller: Feature Flag Check
+    Controller->>FFA: Check "create-transaction" flag
+    FFA-->>Controller: ✓ Feature enabled
+    
+    Note over Controller: Metrics Tracking
+    Controller->>MA: Track "transactions.created"
+    MA-->>Controller: ✓ Metric recorded
+    
+    Note over Controller: Domain Validation
+    Controller->>Domain: new Transaction(-50.00, "", EXPENSE)
+    Domain->>Domain: Validate amount > 0
+    Domain->>GEH: Throw IllegalArgumentException("Amount must be positive")
+    
+    Note over GEH: Exception Handling
+    GEH->>GEH: Log exception details
+    GEH->>GEH: Create error response
+    GEH-->>Client: HTTP 400 Bad Request<br/>{"error": "Amount must be positive"}

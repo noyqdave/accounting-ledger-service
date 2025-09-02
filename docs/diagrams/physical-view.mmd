@@ -1,0 +1,30 @@
+graph TB
+    subgraph "Application Server"
+        JVM[JVM - Java 17]
+        SB[Spring Boot Application]
+        TC[Embedded Tomcat]
+    end
+    
+    subgraph "Database Layer"
+        H2[H2 In-Memory Database]
+    end
+    
+    subgraph "External Interfaces"
+        HTTP[HTTP/REST API - Port 8080]
+        ACT[Actuator Endpoints]
+        SWAGGER[Swagger UI - /swagger-ui.html]
+    end
+    
+    subgraph "Monitoring & Observability"
+        METRICS[Micrometer Metrics]
+        HEALTH[Health Checks]
+    end
+    
+    SB --> JVM
+    SB --> TC
+    SB --> H2
+    SB --> METRICS
+    TC --> HTTP
+    SB --> ACT
+    SB --> SWAGGER
+    ACT --> HEALTH

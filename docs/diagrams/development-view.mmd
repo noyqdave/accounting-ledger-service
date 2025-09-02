@@ -1,0 +1,43 @@
+graph TD
+    subgraph "com.example.ledger"
+        APP[LedgerServiceApplication.java]
+        
+        subgraph "adapters"
+            subgraph "in/web"
+                TC[TransactionController.java]
+                DTO[dto/]
+            end
+            
+            subgraph "out/persistence"
+                TRA[TransactionRepositoryAdapter.java]
+                subgraph "entity"
+                    TE[TransactionEntity.java]
+                end
+            end
+        end
+        
+        subgraph "application/usecase"
+            CTS[CreateTransactionService.java]
+            CTU[CreateTransactionUseCase.java]
+            GTS[GetAllTransactionsService.java]
+            GTU[GetAllTransactionsUseCase.java]
+        end
+        
+        subgraph "domain"
+            subgraph "model"
+                T[Transaction.java]
+                TT[TransactionType.java]
+            end
+            
+            subgraph "port"
+                TRP[TransactionRepositoryPort.java]
+            end
+        end
+        
+        subgraph "config"
+            FF[FeatureFlags.java]
+            FFA[FeatureFlagAspect.java]
+            MA[MetricsAspect.java]
+            GEH[GlobalExceptionHandler.java]
+        end
+    end

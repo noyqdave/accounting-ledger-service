@@ -1,0 +1,41 @@
+graph TB
+    subgraph "Domain Layer"
+        T[Transaction]
+        TT[TransactionType]
+        TRP[TransactionRepositoryPort]
+    end
+    
+    subgraph "Application Layer"
+        CTU[CreateTransactionUseCase]
+        CTS[CreateTransactionService]
+        GTU[GetAllTransactionsUseCase]
+        GTS[GetAllTransactionsService]
+    end
+    
+    subgraph "Infrastructure Layer"
+        TC[TransactionController]
+        TRA[TransactionRepositoryAdapter]
+        TE[TransactionEntity]
+        TJR[TransactionJpaRepository]
+    end
+    
+    subgraph "Configuration Layer"
+        FF[FeatureFlags]
+        FFA[FeatureFlagAspect]
+        MA[MetricsAspect]
+        GEH[GlobalExceptionHandler]
+    end
+    
+    %% Dependencies
+    CTS --> TRP
+    GTS --> TRP
+    TC --> CTU
+    TC --> GTU
+    TRA --> TRP
+    TRA --> TJR
+    TRA --> TE
+    
+    %% Cross-cutting concerns
+    FFA -.-> TC
+    MA -.-> TC
+    GEH -.-> TC

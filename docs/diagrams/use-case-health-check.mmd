@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant Monitor
+    participant Actuator as Spring Actuator
+    participant App as Application
+    participant DB as H2 Database
+    
+    Monitor->>Actuator: GET /actuator/health
+    
+    Note over Actuator: Health Check
+    Actuator->>App: Check application status
+    App->>DB: Test database connection
+    DB-->>App: ✓ Connection successful
+    App-->>Actuator: Application healthy
+    
+    Actuator-->>Monitor: HTTP 200<br/>{"status": "UP", "components": {"db": {"status": "UP"}}}

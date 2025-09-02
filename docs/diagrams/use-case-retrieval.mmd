@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant Client
+    participant Controller as TransactionController
+    participant FFA as FeatureFlagAspect
+    participant MA as MetricsAspect
+    participant Service as GetAllTransactionsService
+    participant Adapter as TransactionRepositoryAdapter
+    participant DB as H2 Database
+    
+    Client->>Controller: GET /transactions
+    
+    Note over Controller: Feature Flag Check
+    Controller->>FFA: Check "get-all-transactions" flag
+    FFA-->>Controller: ✓ Feature enabled
+    
+    Note over Controller: Metrics Tracking
+    Controller->>MA: Track "transactions.fetched"
+    MA-->>Controller: ✓ Metric recorded
+    
+    Note over Controller: Business Logic
+    Controller->>Service: getAll()
+    Service->>Adapter: findAll()
+    
+    Note over Adapter: Database Query
+    Adapter->>DB: SELECT * FROM transactions
+    DB-->>Adapter: List<TransactionEntity>
+    
+    Note over Adapter: Entity to Domain Mapping
+    loop For each entity
+        Adapter->>Adapter: mapToDomain(entity)
+    end
+    Adapter-->>Service: List<Transaction>
+    Service-->>Controller: List<Transaction>
+    Controller-->>Client: HTTP 200<br/>[{id: "uuid1", amount: 100.00, ...}, {id: "uuid2", amount: 50.00, ...}]

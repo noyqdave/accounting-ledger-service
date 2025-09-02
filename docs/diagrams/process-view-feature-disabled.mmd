@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant Client
+    participant Controller as TransactionController
+    participant FFA as FeatureFlagAspect
+    participant GEH as GlobalExceptionHandler
+    
+    Client->>Controller: POST /transactions
+    Controller->>FFA: Check feature flag
+    FFA->>FFA: Feature disabled
+    FFA->>GEH: Throw FeatureFlagDisabledException
+    GEH-->>Client: HTTP 403 Forbidden
