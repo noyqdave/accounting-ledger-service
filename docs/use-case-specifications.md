@@ -8,7 +8,6 @@
 - **Primary Actor**: External System/User
 - **Secondary Actors**: None
 - **Preconditions**: 
-  - Feature flag "create-transaction" is enabled
   - System is operational and database is accessible
 - **Postconditions**: 
   - New transaction is created and persisted
@@ -18,7 +17,7 @@
 ### Basic Flow
 1. **Actor initiates transaction creation**: The actor sends a POST request to `/transactions` endpoint with transaction data including amount, description, and type (EXPENSE or REVENUE).
 
-2. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled. If enabled, processing continues to step 3.
+2. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled. If enabled, processing continues to step 3. If disabled, the system follows alternative flow A1.
 
 3. **System tracks metrics**: The system records a "transactions.created" metric for monitoring purposes.
 
@@ -89,7 +88,6 @@
 - **Primary Actor**: External System/User
 - **Secondary Actors**: None
 - **Preconditions**: 
-  - Feature flag "get-all-transactions" is enabled
   - System is operational and database is accessible
 - **Postconditions**: 
   - All transactions are retrieved and returned
@@ -98,7 +96,7 @@
 ### Basic Flow
 1. **Actor requests all transactions**: The actor sends a GET request to `/transactions` endpoint.
 
-2. **System validates feature flag**: The system checks if the "get-all-transactions" feature flag is enabled. If enabled, processing continues to step 3.
+2. **System validates feature flag**: The system checks if the "get-all-transactions" feature flag is enabled. If enabled, processing continues to step 3. If disabled, the system follows alternative flow A1.
 
 3. **System tracks metrics**: The system records a "transactions.fetched" metric for monitoring purposes.
 
