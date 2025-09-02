@@ -26,6 +26,7 @@ These BDD scenarios are derived from UC-001: Create Transaction use case, focusi
 | small business expense | $99.99 | Coffee and snacks | EXPENSE | an expense |
 | recurring business expense | $1,500.00 | Monthly subscription for cloud hosting services including compute, storage, and networking resources | EXPENSE | an expense |
 | major business expense | $50,000.00 | Quarterly software license renewal | EXPENSE | an expense |
+| business revenue | $15,000.00 | Monthly retainer payment | REVENUE | revenue |
 
 ---
 
@@ -106,10 +107,10 @@ These BDD scenarios are derived from UC-001: Create Transaction use case, focusi
 - **Business Focus**: Examples table shows business context for each test case
 
 ### Test Coverage:
-- **Transaction Types**: Both EXPENSE and REVENUE
+- **Transaction Types**: Both EXPENSE and REVENUE (only two types supported by the system)
 - **Amount Ranges**: Small ($99.99) to Large ($50,000.00)
 - **Description Lengths**: Short to detailed descriptions
-- **Business Context**: Different types of business transactions
+- **Business Context**: Different types of business transactions (expenses and revenue)
 
 ### Mapping to Use Case:
 - **Scenario Outline**: Tests the complete basic flow (steps 1-8) of UC-001
