@@ -3,7 +3,6 @@ package com.example.ledger.adapters.in.web;
 import com.example.ledger.adapters.in.web.dto.CreateTransactionRequest;
 import com.example.ledger.application.usecase.CreateTransactionUseCase;
 import com.example.ledger.application.usecase.GetAllTransactionsUseCase;
-import com.example.ledger.config.FeatureEnabled;
 import com.example.ledger.config.TrackMetric;
 import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.config.FeatureFlags;
@@ -26,7 +25,6 @@ public class TransactionController {
 
     }
     @TrackMetric("transactions.created")
-    @FeatureEnabled("create-transaction")
     @PostMapping
     public ResponseEntity<Transaction> createTransaction(@RequestBody CreateTransactionRequest request) {
 
@@ -41,7 +39,6 @@ public class TransactionController {
         return ResponseEntity.ok(savedTransaction);
     }
     @TrackMetric("transactions.fetched")
-    @FeatureEnabled("get-all-transactions")
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
 

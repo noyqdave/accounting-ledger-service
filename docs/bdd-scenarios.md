@@ -6,7 +6,7 @@ These BDD scenarios are derived from UC-001: Create Transaction use case, focusi
 ## Feature: Create Transaction
 
 ### Scenario Outline: Create Transaction with Various Data Types
-**Given** I want to record a <transaction_category>  
+**Given** I want to record a transaction  
 **And** the transaction amount is <amount>  
 **And** the transaction description is "<description>"  
 **And** the transaction type is "<type>"  
@@ -15,18 +15,18 @@ These BDD scenarios are derived from UC-001: Create Transaction use case, focusi
 **And** the transaction should have a unique identifier  
 **And** the transaction should show the correct amount of <amount>  
 **And** the transaction should show the description "<description>"  
-**And** the transaction should be marked as <type_lowercase>  
+**And** the transaction should be marked as <type>  
 **And** the transaction should have a timestamp showing when it was created
 
 #### Examples:
-| transaction_category | amount | description | type | type_lowercase |
-|---------------------|--------|-------------|------|----------------|
-| business expense | $100.00 | Office supplies | EXPENSE | an expense |
-| business revenue | $2,500.00 | Client payment for project work | REVENUE | revenue |
-| small business expense | $99.99 | Coffee and snacks | EXPENSE | an expense |
-| recurring business expense | $1,500.00 | Monthly subscription for cloud hosting services including compute, storage, and networking resources | EXPENSE | an expense |
-| major business expense | $50,000.00 | Quarterly software license renewal | EXPENSE | an expense |
-| business revenue | $15,000.00 | Monthly retainer payment | REVENUE | revenue |
+| amount | description | type |
+|--------|-------------|------|
+| $100.00 | Office supplies | EXPENSE |
+| $2,500.00 | Client payment for project work | REVENUE |
+| $99.99 | Coffee and snacks | EXPENSE |
+| $1,500.00 | Monthly subscription for cloud hosting services including compute, storage, and networking resources | EXPENSE |
+| $50,000.00 | Quarterly software license renewal | EXPENSE |
+| $15,000.00 | Monthly retainer payment | REVENUE |
 
 ---
 
