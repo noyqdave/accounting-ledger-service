@@ -8,6 +8,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +16,10 @@ import java.util.Map;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
+@TestPropertySource(properties = {
+    "feature.create-transaction.enabled=false",
+    "feature.get-all-transactions.enabled=true"
+})
 public class TransactionStepDefinitionsFeatureDisabled {
 
     @LocalServerPort
