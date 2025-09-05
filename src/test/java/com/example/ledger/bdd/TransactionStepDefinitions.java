@@ -140,11 +140,4 @@ public class TransactionStepDefinitions {
     public void the_transaction_description_is_null() {
         // Don't add description to transactionData, it will be null
     }
-
-    @Then("the transaction should be marked as {string}")
-    public void the_transaction_should_be_marked_as(String expectedType) {
-        response.then()
-                .statusCode(200)
-                .body("type", equalTo(expectedType));
-    }
 }
