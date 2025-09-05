@@ -4,6 +4,7 @@ import com.example.ledger.adapters.in.web.dto.CreateTransactionRequest;
 import com.example.ledger.application.usecase.CreateTransactionUseCase;
 import com.example.ledger.application.usecase.GetAllTransactionsUseCase;
 import com.example.ledger.config.TrackMetric;
+import com.example.ledger.config.FeatureEnabled;
 import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.config.FeatureFlags;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +34,7 @@ public class TransactionController {
         this.getAllTransactionsUseCase = getAllTransactionsUseCase;
 
     }
+    @FeatureEnabled("create-transaction")
     @TrackMetric("transactions.created")
     @PostMapping
     @Operation(
@@ -105,6 +107,7 @@ public class TransactionController {
         Transaction savedTransaction = createTransactionUseCase.create(transaction);
         return ResponseEntity.ok(savedTransaction);
     }
+    @FeatureEnabled("get-all-transactions")
     @TrackMetric("transactions.fetched")
     @GetMapping
     @Operation(
