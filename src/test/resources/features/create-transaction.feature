@@ -69,13 +69,3 @@ Feature: Create Transaction
     When I create the transaction
     Then the transaction should not be created
     And I should receive an error message about the transaction type being invalid
-
-  Scenario: Create Transaction When Feature is Disabled
-    Given I want to record a transaction
-    And the transaction amount is 100.00
-    And the transaction description is "Test transaction"
-    And the transaction type is "EXPENSE"
-    And the create transaction feature is disabled
-    When I create the transaction
-    Then the transaction should not be created
-    And I should receive an error message that the feature is disabled

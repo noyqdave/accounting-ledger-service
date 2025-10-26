@@ -1,7 +1,6 @@
 package com.example.ledger.application.usecase;
 
 import com.example.ledger.config.FeatureFlagAspect;
-import com.example.ledger.config.FeatureFlags;
 import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.domain.model.TransactionType;
 import com.example.ledger.domain.port.TransactionRepositoryPort;

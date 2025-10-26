@@ -24,7 +24,7 @@ These BDD scenarios are derived from UC-001: Create Transaction use case, coveri
 | 100.00 | Office supplies | EXPENSE | # Test typical small business expense |
 | 2500.00 | Client payment for project work | REVENUE | # Test typical project revenue |
 | 99.99 | Coffee and snacks | EXPENSE | # Test decimal precision and small amounts |
-| 1500.00 | Monthly subscription for cloud hosting services | EXPENSE | # Test long description handling |
+JUnit| 1500.00 | Monthly subscription for cloud hosting services | EXPENSE | # Test long description handling |
 | 50000.00 | Quarterly software license renewal | EXPENSE | # Test large business expense |
 | 15000.00 | Monthly retainer payment | REVENUE | # Test recurring revenue stream |
 

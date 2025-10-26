@@ -1,6 +1,5 @@
 package com.example.ledger.bdd;
 
-import com.example.ledger.domain.model.TransactionType;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -8,11 +7,9 @@ import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.TestPropertySource;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -96,7 +93,7 @@ public class TransactionStepDefinitions {
                 .body("description", equalTo(expectedDescription));
     }
 
-    @And("the transaction should be marked as {string}")
+    @Then("^the transaction should be marked as (.+)$")
     public void the_transaction_should_be_marked_as(String expectedType) {
         response.then()
                 .body("type", equalTo(expectedType));
@@ -131,8 +128,7 @@ public class TransactionStepDefinitions {
         response.then()
                 .body("error", anyOf(
                     containsString("type"),
-                    containsString("invalid"),
-                    containsString("enum")
+                    containsString("invalid")
                 ));
     }
 
