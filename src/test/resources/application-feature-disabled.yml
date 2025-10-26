@@ -2,7 +2,7 @@ feature:
   create-transaction:
     enabled: false
   get-all-transactions:
-    enabled: true
+    enabled: false
 
 spring:
   datasource:

@@ -35,24 +35,24 @@ public class TransactionStepDefinitionsFeatureDisabled {
         RestAssured.baseURI = baseUrl;
     }
 
-    @And("the transaction amount is {double} with feature disabled")
+    @Given("the transaction amount is {double} with feature disabled")
     public void the_transaction_amount_is_with_feature_disabled(Double amount) {
         transactionData.put("amount", amount);
     }
 
-    @And("the transaction description is {string} with feature disabled")
+    @Given("the transaction description is {string} with feature disabled")
     public void the_transaction_description_is_with_feature_disabled(String description) {
         if (!"null".equals(description)) {
             transactionData.put("description", description);
         }
     }
 
-    @And("the transaction type is {string} with feature disabled")
+    @Given("the transaction type is {string} with feature disabled")
     public void the_transaction_type_is_with_feature_disabled(String type) {
         transactionData.put("type", type);
     }
 
-    @And("the create transaction feature is disabled")
+    @Given("the create transaction feature is disabled")
     public void the_create_transaction_feature_is_disabled() {
         // This scenario will be run with feature flags disabled
     }
@@ -72,7 +72,7 @@ public class TransactionStepDefinitionsFeatureDisabled {
                 .statusCode(403);
     }
 
-    @And("I should receive an error message that the feature is disabled")
+    @Given("I should receive an error message that the feature is disabled")
     public void i_should_receive_an_error_message_that_the_feature_is_disabled() {
         response.then()
                 .body("error", equalTo("Feature is disabled"));

@@ -37,19 +37,19 @@ public class TransactionStepDefinitions {
         RestAssured.baseURI = baseUrl;
     }
 
-    @And("the transaction amount is {double}")
+    @Given("the transaction amount is {double}")
     public void the_transaction_amount_is(Double amount) {
         transactionData.put("amount", amount);
     }
 
-    @And("the transaction description is {string}")
+    @Given("the transaction description is {string}")
     public void the_transaction_description_is(String description) {
         if (!"null".equals(description)) {
             transactionData.put("description", description);
         }
     }
 
-    @And("the transaction type is {string}")
+    @Given("the transaction type is {string}")
     public void the_transaction_type_is(String type) {
         transactionData.put("type", type);
     }
@@ -74,20 +74,20 @@ public class TransactionStepDefinitions {
                 .body("date", notNullValue());
     }
 
-    @And("the transaction should have a unique identifier")
+    @Then("the transaction should have a unique identifier")
     public void the_transaction_should_have_a_unique_identifier() {
         String id = response.then().extract().path("id");
         assertNotNull(id);
         assertDoesNotThrow(() -> UUID.fromString(id), "ID should be a valid UUID");
     }
 
-    @And("the transaction should show the correct amount of {double}")
+    @Then("the transaction should show the correct amount of {double}")
     public void the_transaction_should_show_the_correct_amount_of(Double expectedAmount) {
         response.then()
                 .body("amount", equalTo(expectedAmount.floatValue()));
     }
 
-    @And("the transaction should show the description {string}")
+    @Then("the transaction should show the description {string}")
     public void the_transaction_should_show_the_description(String expectedDescription) {
         response.then()
                 .body("description", equalTo(expectedDescription));
@@ -99,7 +99,7 @@ public class TransactionStepDefinitions {
                 .body("type", equalTo(expectedType));
     }
 
-    @And("the transaction should have a timestamp showing when it was created")
+    @Then("the transaction should have a timestamp showing when it was created")
     public void the_transaction_should_have_a_timestamp_showing_when_it_was_created() {
         response.then()
                 .body("date", notNullValue());
@@ -111,19 +111,19 @@ public class TransactionStepDefinitions {
                 .statusCode(anyOf(equalTo(400), equalTo(403), equalTo(422)));
     }
 
-    @And("I should receive an error message about the amount being invalid")
+    @Then("I should receive an error message about the amount being invalid")
     public void i_should_receive_an_error_message_about_the_amount_being_invalid() {
         response.then()
                 .body("error", containsString("Amount must be positive"));
     }
 
-    @And("I should receive an error message about the description being required")
+    @Then("I should receive an error message about the description being required")
     public void i_should_receive_an_error_message_about_the_description_being_required() {
         response.then()
                 .body("error", containsString("Description must not be null or empty"));
     }
 
-    @And("I should receive an error message about the transaction type being invalid")
+    @Then("I should receive an error message about the transaction type being invalid")
     public void i_should_receive_an_error_message_about_the_transaction_type_being_invalid() {
         response.then()
                 .body("error", anyOf(
