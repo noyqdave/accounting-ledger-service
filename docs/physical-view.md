@@ -30,6 +30,7 @@ graph LR
     end
     
     subgraph "Cross-Cutting"
+        FILTER[HTTP Filter]
         AOP[Spring AOP]
         CONFIG[Configuration]
     end
@@ -42,6 +43,7 @@ graph LR
     SW --> OPENAPI
     SB --> MICRO
     SB --> ACTUATOR
+    SB --> FILTER
     SB --> AOP
     SB --> CONFIG
 ```

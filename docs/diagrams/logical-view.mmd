@@ -20,8 +20,9 @@ graph TB
     end
     
     subgraph "Configuration Layer"
-        FF[FeatureFlags]
-        FFA[FeatureFlagAspect]
+        FFS[FeatureFlagService]
+        FFSI[FeatureFlagServiceImpl]
+        FFF[FeatureFlagFilter]
         MA[MetricsAspect]
         GEH[GlobalExceptionHandler]
     end
@@ -36,6 +37,8 @@ graph TB
     TRA --> TE
     
     %% Cross-cutting concerns
-    FFA -.-> TC
+    FFF -.-> TC
+    FFF --> FFS
+    FFSI --> FFS
     MA -.-> TC
     GEH -.-> TC

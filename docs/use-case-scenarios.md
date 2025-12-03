@@ -57,13 +57,19 @@
 
 ### Detailed Flow
 
-![Feature Flag Disabled Sequence](diagrams/use-case-feature-disabled.mmd)
+When a feature flag is disabled:
+1. HTTP request arrives at FeatureFlagFilter
+2. Filter checks feature flag via FeatureFlagService
+3. FeatureFlagService reads from application.yml configuration
+4. If disabled, FeatureFlagFilter returns HTTP 403 Forbidden with JSON error
+5. Request never reaches the controller
 
 ### Success Criteria
-- Request is properly rejected
+- Request is properly rejected at filter level
 - HTTP 403 Forbidden status
-- Clear error message indicating disabled feature
+- Clear error message: `{"error": "Feature is disabled"}`
 - No business logic execution
+- No controller method invocation
 
 ---
 
@@ -115,8 +121,9 @@ All business operations automatically track metrics:
 
 ### Feature Flag Management
 - Runtime configuration via `application.yml`
-- AOP-based enforcement with `@FeatureEnabled` annotation
-- Graceful degradation when features are disabled
+- Filter-based enforcement via `FeatureFlagFilter` at HTTP layer
+- Endpoint-to-feature-flag mappings configurable in `application.yml`
+- Graceful degradation when features are disabled (returns 403 with JSON error)
 
 ### Error Handling
 - Global exception handler for consistent error responses

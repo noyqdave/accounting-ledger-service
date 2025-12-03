@@ -26,8 +26,9 @@ The logical view shows the system's decomposition into key abstractions and thei
 - **TransactionJpaRepository**: Spring Data JPA repository
 
 ### Configuration Layer
-- **FeatureFlags**: Feature flag configuration management
-- **FeatureFlagAspect**: AOP aspect for feature flag enforcement
+- **FeatureFlagService**: Interface for feature flag checking
+- **FeatureFlagServiceImpl**: Implementation reading from application properties
+- **FeatureFlagFilter**: HTTP filter for feature flag enforcement at request level
 - **MetricsAspect**: AOP aspect for metrics collection
 - **GlobalExceptionHandler**: Global exception handling
 
@@ -36,26 +37,28 @@ The logical view shows the system's decomposition into key abstractions and thei
 The process view illustrates the runtime behavior and interactions between components.
 
 ### Transaction Creation Flow
-1. **HTTP Request** → TransactionController
-2. **Feature Flag Check** → FeatureFlagAspect validates "create-transaction" flag
-3. **Metrics Tracking** → MetricsAspect tracks "transactions.created" metric
-4. **DTO Conversion** → CreateTransactionRequest → Transaction domain model
-5. **Use Case Execution** → CreateTransactionService.create()
-6. **Repository Call** → TransactionRepositoryAdapter.save()
-7. **Entity Mapping** → Transaction → TransactionEntity
-8. **Database Persistence** → TransactionJpaRepository.save()
-9. **Response Mapping** → TransactionEntity → Transaction
-10. **HTTP Response** → Transaction object returned
+1. **HTTP Request** → FeatureFlagFilter intercepts request
+2. **Feature Flag Check** → FeatureFlagFilter validates "create-transaction" flag via FeatureFlagService
+3. **Request Forwarding** → If enabled, request proceeds to TransactionController
+4. **Metrics Tracking** → MetricsAspect tracks "transactions.created" metric
+5. **DTO Conversion** → CreateTransactionRequest → Transaction domain model
+6. **Use Case Execution** → CreateTransactionService.create()
+7. **Repository Call** → TransactionRepositoryAdapter.save()
+8. **Entity Mapping** → Transaction → TransactionEntity
+9. **Database Persistence** → TransactionJpaRepository.save()
+10. **Response Mapping** → TransactionEntity → Transaction
+11. **HTTP Response** → Transaction object returned
 
 ### Transaction Retrieval Flow
-1. **HTTP Request** → TransactionController
-2. **Feature Flag Check** → FeatureFlagAspect validates "get-all-transactions" flag
-3. **Metrics Tracking** → MetricsAspect tracks "transactions.fetched" metric
-4. **Use Case Execution** → GetAllTransactionsService.getAll()
-5. **Repository Call** → TransactionRepositoryAdapter.findAll()
-6. **Database Query** → TransactionJpaRepository.findAll()
-7. **Entity Mapping** → List<TransactionEntity> → List<Transaction>
-8. **HTTP Response** → List<Transaction> returned
+1. **HTTP Request** → FeatureFlagFilter intercepts request
+2. **Feature Flag Check** → FeatureFlagFilter validates "get-all-transactions" flag via FeatureFlagService
+3. **Request Forwarding** → If enabled, request proceeds to TransactionController
+4. **Metrics Tracking** → MetricsAspect tracks "transactions.fetched" metric
+5. **Use Case Execution** → GetAllTransactionsService.getAll()
+6. **Repository Call** → TransactionRepositoryAdapter.findAll()
+7. **Database Query** → TransactionJpaRepository.findAll()
+8. **Entity Mapping** → List<TransactionEntity> → List<Transaction>
+9. **HTTP Response** → List<Transaction> returned
 
 ## 3. Physical View
 
@@ -108,8 +111,9 @@ com.example.ledger/
 │   └── port/
 │       └── TransactionRepositoryPort.java # Repository interface
 └── config/                               # Configuration
-    ├── FeatureFlags.java
-    ├── FeatureFlagAspect.java
+    ├── FeatureFlagService.java
+    ├── FeatureFlagServiceImpl.java
+    ├── FeatureFlagFilter.java
     ├── MetricsAspect.java
     └── GlobalExceptionHandler.java
 ```
@@ -129,12 +133,13 @@ com.example.ledger/
 
 **Steps**:
 1. Send POST request to `/transactions` with expense data
-2. System validates feature flag "create-transaction"
-3. System tracks metric "transactions.created"
-4. System validates transaction data (amount > 0, description not empty)
-5. System creates Transaction domain object with generated UUID and timestamp
-6. System persists transaction to database
-7. System returns created transaction with assigned ID
+2. FeatureFlagFilter intercepts request and validates "create-transaction" flag
+3. If enabled, request proceeds to TransactionController
+4. System tracks metric "transactions.created"
+5. System validates transaction data (amount > 0, description not empty)
+6. System creates Transaction domain object with generated UUID and timestamp
+7. System persists transaction to database
+8. System returns created transaction with assigned ID
 
 **Success Criteria**: Transaction is created and persisted with valid ID
 
@@ -145,11 +150,12 @@ com.example.ledger/
 
 **Steps**:
 1. Send GET request to `/transactions`
-2. System validates feature flag "get-all-transactions"
-3. System tracks metric "transactions.fetched"
-4. System retrieves all transactions from database
-5. System maps database entities to domain objects
-6. System returns list of transactions
+2. FeatureFlagFilter intercepts request and validates "get-all-transactions" flag
+3. If enabled, request proceeds to TransactionController
+4. System tracks metric "transactions.fetched"
+5. System retrieves all transactions from database
+6. System maps database entities to domain objects
+7. System returns list of transactions
 
 **Success Criteria**: All transactions are returned in correct format
 
@@ -160,9 +166,9 @@ com.example.ledger/
 
 **Steps**:
 1. Send request to endpoint with disabled feature flag
-2. System checks feature flag configuration
-3. System throws FeatureFlagDisabledException
-4. System returns HTTP 403 Forbidden response
+2. FeatureFlagFilter intercepts request and checks feature flag via FeatureFlagService
+3. FeatureFlagService throws FeatureFlagDisabledException
+4. FeatureFlagFilter catches exception and returns HTTP 403 Forbidden response with JSON error
 
 **Success Criteria**: Request is properly rejected with appropriate error
 
@@ -174,14 +180,15 @@ com.example.ledger/
 - **Adapters**: Implementations of ports (TransactionRepositoryAdapter, TransactionController)
 
 ### Cross-Cutting Concerns
-- **Aspect-Oriented Programming**: Feature flags and metrics via Spring AOP
+- **HTTP Filter Pattern**: Feature flags enforced via servlet filter (FeatureFlagFilter)
+- **Aspect-Oriented Programming**: Metrics collection via Spring AOP (MetricsAspect)
 - **Configuration Management**: Externalized configuration via application.yml
 - **Exception Handling**: Global exception handler for consistent error responses
 
 ### Testing Strategy
 - **Unit Tests**: Domain model validation and business logic
 - **Integration Tests**: Controller endpoints and repository interactions
-- **Feature Flag Tests**: AOP behavior validation
+- **Feature Flag Tests**: Filter behavior validation with configurable service
 - **Metrics Tests**: AOP metrics collection validation
 
 ## Technology Stack

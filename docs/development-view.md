@@ -28,8 +28,9 @@ graph TB
     end
     
     subgraph "Configuration Layer"
-        FF[FeatureFlags]
-        FFA[FeatureFlagAspect]
+        FFS[FeatureFlagService]
+        FFSI[FeatureFlagServiceImpl]
+        FFF[FeatureFlagFilter]
         MA[MetricsAspect]
         GEH[GlobalExceptionHandler]
     end
@@ -43,7 +44,9 @@ graph TB
     TRA --> TE
     
     %% Cross-cutting (dotted lines)
-    FFA -.-> TC
+    FFF -.-> TC
+    FFF --> FFS
+    FFSI --> FFS
     MA -.-> TC
     GEH -.-> TC
 ```
@@ -79,8 +82,9 @@ graph TB
 - **Purpose**: Cross-cutting concerns and system configuration
 - **Dependencies**: Used by all layers
 - **Key Classes**:
-  - `FeatureFlags`: Feature flag configuration
-  - `FeatureFlagAspect`: AOP for feature flag enforcement
+  - `FeatureFlagService`: Interface for feature flag checking
+  - `FeatureFlagServiceImpl`: Implementation reading from application.yml
+  - `FeatureFlagFilter`: HTTP filter for feature flag enforcement
   - `MetricsAspect`: AOP for metrics collection
   - `GlobalExceptionHandler`: Centralized error handling
 
@@ -128,7 +132,7 @@ src/test/java/com/example/ledger/
 ### Test Types
 - **Unit Tests**: Domain model validation and business logic
 - **Integration Tests**: Controller endpoints and repository interactions
-- **Feature Flag Tests**: AOP behavior validation
+- **Feature Flag Tests**: Filter behavior validation with configurable service
 - **Metrics Tests**: AOP metrics collection validation
 
 ## Development Guidelines
@@ -143,4 +147,4 @@ src/test/java/com/example/ledger/
 - **Domain Models**: Business-focused names (Transaction, TransactionType)
 - **Use Cases**: Action-oriented names (CreateTransaction, GetAllTransactions)
 - **Adapters**: Technology-specific names (TransactionController, TransactionRepositoryAdapter)
-- **Configuration**: Cross-cutting concern names (FeatureFlags, MetricsAspect)
+- **Configuration**: Cross-cutting concern names (FeatureFlagService, FeatureFlagFilter, MetricsAspect)

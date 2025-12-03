@@ -35,8 +35,9 @@ graph TD
         end
         
         subgraph "config"
-            FF[FeatureFlags.java]
-            FFA[FeatureFlagAspect.java]
+            FFS[FeatureFlagService.java]
+            FFSI[FeatureFlagServiceImpl.java]
+            FFF[FeatureFlagFilter.java]
             MA[MetricsAspect.java]
             GEH[GlobalExceptionHandler.java]
         end

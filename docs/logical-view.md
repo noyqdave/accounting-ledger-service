@@ -19,5 +19,8 @@
 - **Entities**: Database persistence objects
 
 ### Configuration Layer
-- **Aspects**: Cross-cutting concerns (AOP)
-- **Configuration**: Feature flags and system settings
+- **FeatureFlagService**: Interface for feature flag checking
+- **FeatureFlagServiceImpl**: Implementation reading from application.yml
+- **FeatureFlagFilter**: HTTP filter for feature flag enforcement
+- **MetricsAspect**: AOP aspect for metrics collection
+- **GlobalExceptionHandler**: Centralized error handling

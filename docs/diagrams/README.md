@@ -34,7 +34,6 @@ mmdc -i logical-view.mmd -o logical-view.png
 ### Process View
 - `process-view-creation.mmd` - Transaction creation flow
 - `process-view-retrieval.mmd` - Transaction retrieval flow
-- `process-view-feature-disabled.mmd` - Feature flag disabled flow
 
 ### Physical View
 - `physical-view.mmd` - Deployment architecture and infrastructure
@@ -45,7 +44,6 @@ mmdc -i logical-view.mmd -o logical-view.png
 ### Use Case Scenarios
 - `use-case-creation.mmd` - Detailed transaction creation scenario
 - `use-case-retrieval.mmd` - Detailed transaction retrieval scenario
-- `use-case-feature-disabled.mmd` - Feature flag disabled scenario
 - `use-case-invalid-data.mmd` - Invalid data handling scenario
 - `use-case-health-check.mmd` - System health check scenario
 

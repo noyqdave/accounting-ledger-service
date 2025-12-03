@@ -1,15 +1,17 @@
 sequenceDiagram
     participant Client
+    participant Filter as FeatureFlagFilter
+    participant FFS as FeatureFlagService
     participant Controller as TransactionController
-    participant FFA as FeatureFlagAspect
     participant MA as MetricsAspect
     participant Service as GetAllTransactionsService
     participant Adapter as TransactionRepositoryAdapter
     participant DB as H2 Database
     
-    Client->>Controller: GET /transactions
-    Controller->>FFA: Check "get-all-transactions" flag
-    FFA-->>Controller: Feature enabled
+    Client->>Filter: GET /transactions
+    Filter->>FFS: Check "get-all-transactions" flag
+    FFS-->>Filter: Feature enabled
+    Filter->>Controller: Forward request
     Controller->>MA: Track "transactions.fetched"
     Controller->>Service: getAll()
     Service->>Adapter: findAll()
@@ -17,4 +19,5 @@ sequenceDiagram
     DB-->>Adapter: List<TransactionEntity>
     Adapter-->>Service: List<Transaction>
     Service-->>Controller: List<Transaction>
-    Controller-->>Client: HTTP 200 + List<Transaction>
+    Controller-->>Filter: List<Transaction>
+    Filter-->>Client: HTTP 200 + List<Transaction>
