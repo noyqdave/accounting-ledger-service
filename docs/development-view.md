@@ -120,7 +120,6 @@ src/
 src/test/java/com/example/ledger/
 ├── adapters/in/web/
 │   ├── TransactionControllerTest.java
-│   ├── TransactionFeatureFlagDisabledTest.java
 │   └── TransactionMetricsIntegrationTest.java
 ├── application/usecase/
 │   ├── CreateTransactionServiceTest.java
