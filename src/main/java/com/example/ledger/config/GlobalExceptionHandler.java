@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.*;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(FeatureFlagDisabledException.class)
-    public ResponseEntity<Void> handleFeatureFlagDisabled(FeatureFlagDisabledException ex) {
-        return ResponseEntity.status(403).build();
+    public ResponseEntity<ErrorResponse> handleFeatureFlagDisabled(FeatureFlagDisabledException ex) {
+        ErrorResponse error = new ErrorResponse("Feature is disabled");
+        return ResponseEntity.status(403).body(error);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
