@@ -1,49 +1,163 @@
-# Java 5-Pin Bowling TDD Project
+# Accounting Ledger Service
 
-A Test-Driven Development (TDD) project for implementing 5-pin bowling scoring.
+A Spring Boot microservice for managing financial transactions (expenses and revenue) built using Hexagonal Architecture (Ports and Adapters) pattern.
+
+## Overview
+
+The Accounting Ledger Service provides a RESTful API for creating and retrieving financial transactions. It features:
+- Feature flag support for runtime feature control
+- Metrics tracking and observability
+- Comprehensive BDD testing with Cucumber
+- Clean architecture with separation of concerns
+
+## Features
+
+- **Transaction Management**: Create and retrieve financial transactions (expenses and revenue)
+- **Feature Flags**: Runtime control of features via configuration
+- **Metrics & Observability**: Built-in metrics collection and health checks
+- **API Documentation**: OpenAPI/Swagger documentation
+- **BDD Testing**: Behavior-driven development with Cucumber
+
+## Architecture
+
+This service follows **Hexagonal Architecture** (Ports and Adapters) pattern:
+
+- **Domain Layer**: Core business logic and entities
+- **Application Layer**: Use cases and business services
+- **Infrastructure Layer**: REST controllers and persistence adapters
+- **Configuration Layer**: Cross-cutting concerns (feature flags, metrics, exception handling)
+
+For detailed architecture documentation, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Technology Stack
+
+- **Framework**: Spring Boot 3.2.8
+- **Language**: Java 17
+- **Database**: H2 (in-memory)
+- **Persistence**: Spring Data JPA
+- **API Documentation**: SpringDoc OpenAPI 2.3.0
+- **Metrics**: Micrometer
+- **Testing**: JUnit, Cucumber, RestAssured
+- **Build Tool**: Maven
+
+## Getting Started
+
+### Prerequisites
+
+- Java 17 or higher
+- Maven 3.6+
+
+### Building the Project
+
+```bash
+# Compile the project
+mvn clean compile
+
+# Run tests
+mvn test
+
+# Run BDD tests
+mvn test -Dtest=CucumberTestRunner
+
+# Package the application
+mvn clean package
+```
+
+### Running the Application
+
+```bash
+# Run the Spring Boot application
+mvn spring-boot:run
+
+# Or run the JAR file
+java -jar target/ledger-service-1.0-SNAPSHOT.jar
+```
+
+The service will start on `http://localhost:8080`
+
+### API Documentation
+
+Once the application is running, access the API documentation at:
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+### Health Check
+
+Check the service health status:
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+## API Endpoints
+
+### Create Transaction
+```http
+POST /transactions
+Content-Type: application/json
+
+{
+  "amount": 100.50,
+  "description": "Office supplies",
+  "type": "EXPENSE"
+}
+```
+
+### Get All Transactions
+```http
+GET /transactions
+```
+
+## Configuration
+
+Feature flags can be configured in `application.yml`:
+
+```yaml
+feature-flags:
+  create-transaction: true
+  get-all-transactions: true
+```
+
+## Testing
+
+The project includes comprehensive testing:
+
+- **Unit Tests**: Domain model and business logic validation
+- **Integration Tests**: Controller and repository testing
+- **BDD Tests**: Cucumber feature files with step definitions
+
+Run all tests:
+```bash
+mvn test
+```
+
+Run BDD tests:
+```bash
+mvn test -Dtest=CucumberTestRunner
+```
 
 ## Project Structure
 
 ```
 src/
-├── main/java/com/example/bowling/     # Production code
-└── test/java/com/example/bowling/     # Test code
+├── main/java/com/example/ledger/
+│   ├── adapters/              # Infrastructure adapters
+│   │   ├── in/web/           # REST controllers
+│   │   └── out/persistence/  # Database adapters
+│   ├── application/usecase/  # Application services
+│   ├── domain/               # Domain models and ports
+│   └── config/               # Configuration and cross-cutting concerns
+└── test/
+    ├── java/                 # Test classes
+    └── resources/features/   # Cucumber feature files
 ```
 
-## TDD Approach
+## Documentation
 
-We'll follow the Red-Green-Refactor cycle:
+- [Architecture Documentation](ARCHITECTURE.md)
+- [Use Case Specifications](docs/use-case-specifications.md)
+- [User Stories](docs/user-stories.md)
+- [BDD Scenarios](docs/bdd-scenarios.md)
 
-1. **Red**: Write a failing test
-2. **Green**: Write minimal code to make the test pass
-3. **Refactor**: Improve the code while keeping tests green
+## License
 
-## 5-Pin Bowling Rules
-
-- Each pin has different values: 2, 3, 5, 3, 2 (left to right)
-- Each frame has up to 3 rolls
-- Strike: All 5 pins down in first roll (15 points + next 2 rolls)
-- Spare: All 5 pins down in 2 rolls (15 points + next 1 roll)
-- Perfect game: 12 strikes = 450 points
-
-## Getting Started
-
-```bash
-# Compile the project
-mvn compile
-
-# Run tests
-mvn test
-
-# Run specific test
-mvn test -Dtest=BowlingGameTest
-```
-
-## Development Workflow
-
-1. Write a failing test
-2. Run the test (should fail - Red)
-3. Write minimal code to pass
-4. Run the test (should pass - Green)
-5. Refactor if needed
-6. Repeat
+See [LICENSE](LICENSE) file for details.
