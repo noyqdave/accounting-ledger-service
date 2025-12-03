@@ -1,18 +1,20 @@
 sequenceDiagram
     participant Client
+    participant Filter as FeatureFlagFilter
+    participant FFS as FeatureFlagService
     participant Controller as TransactionController
-    participant FFA as FeatureFlagAspect
     participant MA as MetricsAspect
     participant Service as CreateTransactionService
     participant Adapter as TransactionRepositoryAdapter
     participant DB as H2 Database
     participant Domain as Transaction Domain
     
-    Client->>Controller: POST /transactions<br/>{amount: 100.00, description: "Office supplies", type: "EXPENSE"}
+    Client->>Filter: POST /transactions<br/>{amount: 100.00, description: "Office supplies", type: "EXPENSE"}
     
-    Note over Controller: Feature Flag Check
-    Controller->>FFA: Check "create-transaction" flag
-    FFA-->>Controller: ✓ Feature enabled
+    Note over Filter: Feature Flag Check
+    Filter->>FFS: Check "create-transaction" flag
+    FFS-->>Filter: ✓ Feature enabled
+    Filter->>Controller: Forward request
     
     Note over Controller: Metrics Tracking
     Controller->>MA: Track "transactions.created"
@@ -39,4 +41,5 @@ sequenceDiagram
     Adapter->>Adapter: mapToDomain(savedEntity)
     Adapter-->>Service: Transaction domain object
     Service-->>Controller: Transaction
-    Controller-->>Client: HTTP 200<br/>{id: "uuid", amount: 100.00, description: "Office supplies", type: "EXPENSE", date: "2024-01-15T10:30:00"}
+    Controller-->>Filter: Transaction
+    Filter-->>Client: HTTP 200<br/>{id: "uuid", amount: 100.00, description: "Office supplies", type: "EXPENSE", date: "2024-01-15T10:30:00"}
