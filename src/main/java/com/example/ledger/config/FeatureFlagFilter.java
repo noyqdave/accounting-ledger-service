@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
@@ -18,22 +19,21 @@ import java.util.Map;
 /**
  * Filter that checks feature flags for specific endpoints.
  * This approach is cleaner than AOP and easier to test.
+ * Endpoint-to-feature-flag mappings are configured in application.yml.
  */
 @Component
 public class FeatureFlagFilter extends OncePerRequestFilter {
 
     private final FeatureFlagService featureFlagService;
     private final ObjectMapper objectMapper;
+    private final Map<String, String> endpointFeatureMap;
 
-    // Map of endpoint patterns to feature flag names
-    private static final Map<String, String> ENDPOINT_FEATURE_MAP = Map.of(
-            "POST /transactions", "create-transaction",
-            "GET /transactions", "get-all-transactions"
-    );
-
-    public FeatureFlagFilter(FeatureFlagService featureFlagService, ObjectMapper objectMapper) {
+    public FeatureFlagFilter(FeatureFlagService featureFlagService, 
+                           ObjectMapper objectMapper,
+                           @Value("#{${feature.endpoints:{}}}") Map<String, String> endpointFeatureMap) {
         this.featureFlagService = featureFlagService;
         this.objectMapper = objectMapper;
+        this.endpointFeatureMap = endpointFeatureMap != null ? endpointFeatureMap : Map.of();
     }
 
     @Override
@@ -45,7 +45,7 @@ public class FeatureFlagFilter extends OncePerRequestFilter {
         String endpointKey = method + " " + path;
 
         // Check if this endpoint has a feature flag requirement
-        String featureName = ENDPOINT_FEATURE_MAP.get(endpointKey);
+        String featureName = endpointFeatureMap.get(endpointKey);
         
         if (featureName != null) {
             try {
