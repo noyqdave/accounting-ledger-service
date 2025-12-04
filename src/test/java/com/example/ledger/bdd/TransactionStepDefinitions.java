@@ -10,6 +10,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -64,13 +65,48 @@ public class TransactionStepDefinitions {
 
     @Then("the transaction should be recorded in the ledger")
     public void the_transaction_should_be_recorded_in_the_ledger() {
+        // First verify the HTTP response is successful
         response.then()
                 .statusCode(200)
-                .body("id", notNullValue())
-                .body("amount", equalTo(((Number) transactionData.get("amount")).floatValue()))
-                .body("description", equalTo(transactionData.get("description")))
-                .body("type", equalTo(transactionData.get("type")))
-                .body("date", notNullValue());
+                .body("id", notNullValue());
+        
+        // Extract the transaction ID from the response
+        String transactionIdString = response.then().extract().path("id");
+        assertNotNull(transactionIdString, "Transaction ID should not be null");
+        UUID transactionId = UUID.fromString(transactionIdString);
+        
+        // Verify the transaction exists in the database by retrieving all transactions
+        Response getAllResponse = given()
+                .when()
+                .get("/transactions");
+        
+        getAllResponse.then()
+                .statusCode(200);
+        
+        // Find the transaction in the list by ID
+        List<Map<String, Object>> allTransactions = getAllResponse.then()
+                .extract()
+                .jsonPath()
+                .getList("");
+        
+        Map<String, Object> savedTransaction = allTransactions.stream()
+                .filter(tx -> transactionIdString.equals(tx.get("id").toString()))
+                .findFirst()
+                .orElse(null);
+        
+        assertNotNull(savedTransaction, 
+                "Transaction with ID " + transactionId + " should exist in the ledger");
+        
+        // Verify the transaction data in the ledger matches what was sent
+        Number expectedAmount = ((Number) transactionData.get("amount")).floatValue();
+        assertEquals(expectedAmount.floatValue(), 
+                ((Number) savedTransaction.get("amount")).floatValue(),
+                "Transaction amount in ledger should match the sent amount");
+        assertEquals(transactionData.get("description"), savedTransaction.get("description"),
+                "Transaction description in ledger should match the sent description");
+        assertEquals(transactionData.get("type"), savedTransaction.get("type").toString(),
+                "Transaction type in ledger should match the sent type");
+        assertNotNull(savedTransaction.get("date"), "Transaction date should not be null");
     }
 
     @Then("the transaction should have a unique identifier")
