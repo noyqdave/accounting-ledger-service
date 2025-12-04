@@ -1,11 +1,14 @@
 package com.example.ledger.bdd;
 
+import com.example.ledger.adapters.out.persistence.TransactionJpaRepository;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.TestPropertySource;
 
@@ -27,9 +30,19 @@ public class TransactionStepDefinitions {
     @LocalServerPort
     private int port;
 
+    @Autowired
+    private TransactionJpaRepository transactionJpaRepository;
+
     private Response response;
     private Map<String, Object> transactionData = new HashMap<>();
     private String baseUrl;
+
+    @Before
+    public void setUp() {
+        // Clean the database before each scenario
+        transactionJpaRepository.deleteAll();
+        transactionData.clear();
+    }
 
     @Given("I want to record a transaction")
     public void i_want_to_record_a_transaction() {
