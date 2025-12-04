@@ -33,6 +33,9 @@ public class TransactionStepDefinitions {
     @Autowired
     private TransactionJpaRepository transactionJpaRepository;
 
+    @Autowired
+    private TestContext testContext;
+
     private Response response;
     private Map<String, Object> transactionData = new HashMap<>();
     private String baseUrl;
@@ -42,6 +45,10 @@ public class TransactionStepDefinitions {
         // Clean the database before each scenario
         transactionJpaRepository.deleteAll();
         transactionData.clear();
+        // Also clear shared test context
+        if (testContext != null) {
+            testContext.clear();
+        }
     }
 
     @Given("I want to record a transaction")
@@ -53,27 +60,46 @@ public class TransactionStepDefinitions {
     @Given("the transaction amount is {double}")
     public void the_transaction_amount_is(Double amount) {
         transactionData.put("amount", amount);
+        // Also update shared context for idempotency tests
+        testContext.getTransactionData().put("amount", amount);
     }
 
     @Given("the transaction description is {string}")
     public void the_transaction_description_is(String description) {
         if (!"null".equals(description)) {
             transactionData.put("description", description);
+            // Also update shared context for idempotency tests
+            testContext.getTransactionData().put("description", description);
         }
     }
 
     @Given("the transaction type is {string}")
     public void the_transaction_type_is(String type) {
         transactionData.put("type", type);
+        // Also update shared context for idempotency tests
+        testContext.getTransactionData().put("type", type);
     }
 
     @When("I create the transaction")
     public void i_create_the_transaction() {
-        response = given()
+        // Build request - optionally include idempotency key header if set
+        var requestSpec = given()
                 .contentType(ContentType.JSON)
-                .body(transactionData)
+                .body(transactionData);
+        
+        // Include Idempotency-Key header if set in test context
+        // This allows idempotency scenarios to work with existing transaction creation steps
+        String idempotencyKey = testContext.getIdempotencyKey();
+        if (idempotencyKey != null) {
+            requestSpec = requestSpec.header("Idempotency-Key", idempotencyKey);
+        }
+        
+        response = requestSpec
                 .when()
                 .post("/transactions");
+        
+        // Store response in shared context for idempotency step definitions
+        testContext.setResponse(response);
     }
 
     @Then("the transaction should be recorded in the ledger")
