@@ -4,6 +4,8 @@
 
 The Accounting Ledger Service is a Java microservice built using **Hexagonal Architecture** (Ports and Adapters) pattern with Spring Boot. It provides functionality for managing financial transactions (expenses and revenue) with features like feature flags, metrics tracking, and comprehensive testing.
 
+> **Note**: This document uses the 4+1 architectural view model. For a C4 model perspective, see [C4 Model Documentation](docs/c4-model.md).
+
 ## 1. Logical View
 
 The logical view shows the system's decomposition into key abstractions and their relationships.
