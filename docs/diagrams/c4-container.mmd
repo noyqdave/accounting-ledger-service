@@ -1,0 +1,15 @@
+C4Container
+    title Container diagram for Accounting Ledger Service
+
+    Person(extUser, "External System/User", "External applications or users")
+    
+    System_Boundary(ledgerSystem, "Accounting Ledger Service") {
+        Container(webApp, "Web Application", "Spring Boot 3.2.8, Java 17", "Provides REST API endpoints for transaction management, handles HTTP requests, implements feature flags and metrics")
+        ContainerDb(database, "Database", "H2 In-Memory Database, Spring Data JPA", "Stores transaction data persistently")
+    }
+    
+    System_Ext(monitoring, "External Monitoring Systems", "Systems that consume metrics and health data")
+    
+    Rel(extUser, webApp, "Sends HTTP requests", "REST API (HTTP/JSON)")
+    Rel(webApp, database, "Reads and writes data", "JDBC/JPA")
+    Rel(webApp, monitoring, "Exposes metrics", "HTTP (Actuator endpoints)")

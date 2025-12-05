@@ -1,0 +1,37 @@
+C4Component
+    title Component diagram for Accounting Ledger Service Web Application
+
+    Person(extUser, "External System/User", "External applications or users")
+    
+    Container_Boundary(webApp, "Web Application") {
+        Component(filter, "FeatureFlagFilter", "HTTP Filter", "Intercepts HTTP requests and validates feature flags before processing")
+        Component(controller, "TransactionController", "REST Controller", "Exposes REST endpoints (POST /transactions, GET /transactions), handles HTTP request/response mapping")
+        
+        Component(createService, "CreateTransactionService", "Application Service", "Implements transaction creation business logic and validation")
+        Component(getAllService, "GetAllTransactionsService", "Application Service", "Implements transaction retrieval business logic")
+        
+        ComponentDb(transaction, "Transaction", "Domain Model", "Core business entity with validation rules")
+        
+        Component(repoAdapter, "TransactionRepositoryAdapter", "Repository Adapter", "Implements TransactionRepositoryPort, maps domain models to database entities")
+        ComponentDb(jpaRepo, "TransactionJpaRepository", "JPA Repository", "Provides database CRUD operations via Spring Data JPA")
+        
+        Component(ffService, "FeatureFlagService", "Configuration Service", "Reads feature flag configuration and provides status checking")
+        Component(metrics, "MetricsAspect", "AOP Aspect", "Intercepts method calls and collects metrics via Micrometer")
+        Component(exceptionHandler, "GlobalExceptionHandler", "Exception Handler", "Handles exceptions globally and converts to HTTP responses")
+    }
+    
+    ContainerDb(database, "Database", "H2 In-Memory Database", "Stores transaction data")
+    
+    Rel(extUser, filter, "Sends HTTP requests")
+    Rel(filter, ffService, "Validates flags")
+    Rel(filter, controller, "Forwards requests if enabled")
+    Rel(controller, createService, "Uses", "create()")
+    Rel(controller, getAllService, "Uses", "getAll()")
+    Rel(createService, transaction, "Creates")
+    Rel(getAllService, transaction, "Retrieves")
+    Rel(createService, repoAdapter, "Persists via")
+    Rel(getAllService, repoAdapter, "Retrieves via")
+    Rel(repoAdapter, jpaRepo, "Uses")
+    Rel(jpaRepo, database, "Reads from and writes to")
+    Rel(metrics, controller, "Intercepts", "AOP")
+    Rel(exceptionHandler, controller, "Handles exceptions from")

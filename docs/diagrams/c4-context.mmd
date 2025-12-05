@@ -1,0 +1,8 @@
+C4Context
+    title System Context diagram for Accounting Ledger Service
+
+    Person(extUser, "External System/User", "External applications or users that need to manage financial transactions")
+    
+    System(ledgerService, "Accounting Ledger Service", "A microservice that manages financial transactions (expenses and revenue) with features like feature flags, metrics tracking, and comprehensive testing")
+    
+    Rel(extUser, ledgerService, "Creates and retrieves transactions", "REST API (HTTP/JSON)")

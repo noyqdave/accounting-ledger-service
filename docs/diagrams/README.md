@@ -47,10 +47,16 @@ mmdc -i logical-view.mmd -o logical-view.png
 - `use-case-invalid-data.mmd` - Invalid data handling scenario
 - `use-case-health-check.mmd` - System health check scenario
 
+### C4 Model
+- `c4-context.mmd` - System context diagram showing the system and its relationships with users
+- `c4-container.mmd` - Container diagram showing applications and data stores
+- `c4-component.mmd` - Component diagram showing components within the web application
+
 ## Diagram Types Used
 
 - **Graph Diagrams**: For showing component relationships and system structure
 - **Sequence Diagrams**: For showing runtime behavior and interaction flows
+- **C4 Diagrams**: For hierarchical software architecture visualization (Context, Container, Component levels)
 
 ## Updating Diagrams
 
