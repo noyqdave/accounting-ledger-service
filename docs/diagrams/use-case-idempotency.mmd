@@ -1,0 +1,86 @@
+sequenceDiagram
+    participant Client
+    participant IF as IdempotencyFilter
+    participant IRP as IdempotencyRepositoryPort
+    participant Filter as FeatureFlagFilter
+    participant FFS as FeatureFlagService
+    participant Controller as TransactionController
+    participant MA as MetricsAspect
+    participant Service as CreateTransactionService
+    participant Adapter as TransactionRepositoryAdapter
+    participant DB as H2 Database
+    
+    Note over Client,DB: Scenario: First Request with Idempotency Key
+    Client->>IF: POST /transactions<br/>Idempotency-Key: "880e8400-..."<br/>{amount: 100.00, description: "Office supplies", type: "EXPENSE"}
+    
+    Note over IF: Validate Idempotency Key
+    IF->>IRP: isValidKey("880e8400-...")
+    IRP-->>IF: ✓ Valid UUID format
+    
+    Note over IF: Compute Request Hash
+    IF->>IF: hashRequestBody(requestBody)<br/>SHA-256 hash
+    
+    Note over IF: Check for Cached Response
+    IF->>IRP: getCachedResponse(key, requestHash)
+    IRP-->>IF: Empty (no cached response)
+    
+    Note over IF: Check for Conflict
+    IF->>IRP: hasKeyWithDifferentHash(key, requestHash)
+    IRP-->>IF: false (key doesn't exist)
+    
+    IF->>Filter: Forward request with wrapped body
+    
+    Note over Filter: Feature Flag Check
+    Filter->>FFS: Check "create-transaction" flag
+    FFS-->>Filter: ✓ Feature enabled
+    Filter->>Controller: Forward request
+    
+    Note over Controller: Metrics Tracking
+    Controller->>MA: Track "transactions.created"
+    MA-->>Controller: ✓ Metric recorded
+    
+    Note over Controller: Business Logic
+    Controller->>Service: create(transaction)
+    Service->>Adapter: save(transaction)
+    Adapter->>DB: save(TransactionEntity)
+    DB-->>Adapter: ✓ Entity saved
+    Adapter-->>Service: Transaction
+    Service-->>Controller: Transaction
+    
+    Note over IF: Cache Response
+    IF->>IRP: storeResponse(key, requestHash, response)
+    IRP-->>IF: ✓ Response cached
+    
+    Controller-->>IF: HTTP 200 + Transaction
+    IF-->>Client: HTTP 200<br/>{id: "uuid", amount: 100.00, ...}
+    
+    Note over Client,DB: Scenario: Retry Request with Same Idempotency Key
+    Client->>IF: POST /transactions<br/>Idempotency-Key: "880e8400-..."<br/>{amount: 100.00, description: "Office supplies", type: "EXPENSE"}
+    
+    IF->>IRP: isValidKey("880e8400-...")
+    IRP-->>IF: ✓ Valid
+    
+    IF->>IF: hashRequestBody(requestBody)
+    
+    IF->>IRP: getCachedResponse(key, requestHash)
+    IRP-->>IF: ✓ Cached response found
+    
+    Note over IF: Return Cached Response
+    IF-->>Client: HTTP 200<br/>{id: "same-uuid", amount: 100.00, ...}<br/>(Same transaction as first request)
+    
+    Note over Client,DB: Scenario: Request with Same Key but Different Data
+    Client->>IF: POST /transactions<br/>Idempotency-Key: "880e8400-..."<br/>{amount: 200.00, description: "Office supplies", type: "EXPENSE"}
+    
+    IF->>IRP: isValidKey("880e8400-...")
+    IRP-->>IF: ✓ Valid
+    
+    IF->>IF: hashRequestBody(requestBody)<br/>(Different hash - different amount)
+    
+    IF->>IRP: getCachedResponse(key, requestHash)
+    IRP-->>IF: Empty (different hash)
+    
+    IF->>IRP: hasKeyWithDifferentHash(key, requestHash)
+    IRP-->>IF: ✓ true (key exists with different hash)
+    
+    Note over IF: Conflict Detected
+    IF-->>Client: HTTP 409 Conflict<br/>{"error": "Idempotency key already used with different request parameters"}

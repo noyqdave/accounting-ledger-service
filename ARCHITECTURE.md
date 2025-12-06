@@ -20,10 +20,13 @@ The logical view shows the system's decomposition into key abstractions and thei
 - **CreateTransactionService**: Implementation of transaction creation logic
 - **GetAllTransactionsUseCase**: Interface for retrieving all transactions
 - **GetAllTransactionsService**: Implementation of transaction retrieval logic
+- **IdempotencyRepositoryPort**: Interface defining idempotency key storage contract
 
 ### Infrastructure Layer
 - **TransactionController**: REST API controller (Inbound Adapter)
+- **IdempotencyFilter**: HTTP filter for idempotency key processing (Inbound Adapter)
 - **TransactionRepositoryAdapter**: JPA repository adapter (Outbound Adapter)
+- **InMemoryIdempotencyAdapter**: In-memory idempotency key storage adapter (Outbound Adapter)
 - **TransactionEntity**: JPA entity for database persistence
 - **TransactionJpaRepository**: Spring Data JPA repository
 
@@ -39,17 +42,21 @@ The logical view shows the system's decomposition into key abstractions and thei
 The process view illustrates the runtime behavior and interactions between components.
 
 ### Transaction Creation Flow
-1. **HTTP Request** → FeatureFlagFilter intercepts request
-2. **Feature Flag Check** → FeatureFlagFilter validates "create-transaction" flag via FeatureFlagService
-3. **Request Forwarding** → If enabled, request proceeds to TransactionController
-4. **Metrics Tracking** → MetricsAspect tracks "transactions.created" metric
-5. **DTO Conversion** → CreateTransactionRequest → Transaction domain model
-6. **Use Case Execution** → CreateTransactionService.create()
-7. **Repository Call** → TransactionRepositoryAdapter.save()
-8. **Entity Mapping** → Transaction → TransactionEntity
-9. **Database Persistence** → TransactionJpaRepository.save()
-10. **Response Mapping** → TransactionEntity → Transaction
-11. **HTTP Response** → Transaction object returned
+1. **HTTP Request** → IdempotencyFilter intercepts request (if Idempotency-Key header present)
+2. **Idempotency Check** (if key present) → IdempotencyFilter checks for cached response or conflicts via IdempotencyRepositoryPort
+3. **Cached Response** (if found) → Return cached response immediately, flow ends
+4. **Conflict Detection** (if same key, different request) → Return 409 Conflict, flow ends
+5. **Feature Flag Check** → FeatureFlagFilter validates "create-transaction" flag via FeatureFlagService
+6. **Request Forwarding** → If enabled, request proceeds to TransactionController
+7. **Metrics Tracking** → MetricsAspect tracks "transactions.created" metric
+8. **DTO Conversion** → CreateTransactionRequest → Transaction domain model
+9. **Use Case Execution** → CreateTransactionService.create()
+10. **Repository Call** → TransactionRepositoryAdapter.save()
+11. **Entity Mapping** → Transaction → TransactionEntity
+12. **Database Persistence** → TransactionJpaRepository.save()
+13. **Response Mapping** → TransactionEntity → Transaction
+14. **Response Caching** (if idempotency key present) → IdempotencyFilter caches response via IdempotencyRepositoryPort
+15. **HTTP Response** → Transaction object returned
 
 ### Transaction Retrieval Flow
 1. **HTTP Request** → FeatureFlagFilter intercepts request

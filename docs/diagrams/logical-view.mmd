@@ -10,11 +10,14 @@ graph TB
         CTS[CreateTransactionService]
         GTU[GetAllTransactionsUseCase]
         GTS[GetAllTransactionsService]
+        IRP[IdempotencyRepositoryPort]
     end
     
     subgraph "Infrastructure Layer"
         TC[TransactionController]
+        IF[IdempotencyFilter]
         TRA[TransactionRepositoryAdapter]
+        IMA[InMemoryIdempotencyAdapter]
         TE[TransactionEntity]
         TJR[TransactionJpaRepository]
     end
@@ -35,10 +38,13 @@ graph TB
     TRA --> TRP
     TRA --> TJR
     TRA --> TE
+    IMA --> IRP
     
     %% Cross-cutting concerns
     FFF -.-> TC
     FFF --> FFS
     FFSI --> FFS
+    IF --> IRP
+    IF -.-> TC
     MA -.-> TC
     GEH -.-> TC
