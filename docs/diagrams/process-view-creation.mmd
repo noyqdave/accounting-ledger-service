@@ -1,6 +1,8 @@
 sequenceDiagram
     participant Client
-    participant Filter as FeatureFlagFilter
+    participant IF as IdempotencyFilter
+    participant IRP as IdempotencyRepositoryPort
+    participant FFF as FeatureFlagFilter
     participant FFS as FeatureFlagService
     participant Controller as TransactionController
     participant MA as MetricsAspect
@@ -8,10 +10,19 @@ sequenceDiagram
     participant Adapter as TransactionRepositoryAdapter
     participant DB as H2 Database
     
-    Client->>Filter: POST /transactions
-    Filter->>FFS: Check "create-transaction" flag
-    FFS-->>Filter: Feature enabled
-    Filter->>Controller: Forward request
+    Note over Client,DB: Transaction Creation Flow (with optional idempotency)
+    Client->>IF: POST /transactions<br/>(optionally with Idempotency-Key header)
+    
+    alt Idempotency Key Present
+        IF->>IRP: Check for cached response
+        IRP-->>IF: No cached response (or conflict)
+        Note over IF: Continue to create transaction
+    end
+    
+    IF->>FFF: Forward request
+    FFF->>FFS: Check "create-transaction" flag
+    FFS-->>FFF: Feature enabled
+    FFF->>Controller: Forward request
     Controller->>MA: Track "transactions.created"
     Controller->>Service: create(transaction)
     Service->>Adapter: save(transaction)
@@ -19,5 +30,13 @@ sequenceDiagram
     DB-->>Adapter: Transaction saved
     Adapter-->>Service: Transaction domain object
     Service-->>Controller: Transaction
-    Controller-->>Filter: Transaction
-    Filter-->>Client: HTTP 200 + Transaction
+    
+    alt Idempotency Key Present
+        Controller-->>IF: Transaction response
+        IF->>IRP: Cache response (key, hash, response)
+        IRP-->>IF: Response cached
+    end
+    
+    Controller-->>IF: Transaction
+    IF-->>FFF: Transaction
+    FFF-->>Client: HTTP 200 + Transaction

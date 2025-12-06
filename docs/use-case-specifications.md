@@ -15,27 +15,37 @@
   - Transaction creation metric is recorded
 
 ### Basic Flow
-1. **Actor initiates transaction creation**: The actor sends a POST request to `/transactions` endpoint with transaction data including amount, description, and type (EXPENSE or REVENUE).
+1. **Actor initiates transaction creation**: The actor sends a POST request to `/transactions` endpoint with transaction data including amount, description, and type (EXPENSE or REVENUE). Optionally, the actor may include an `Idempotency-Key` header.
 
 2. **System validates request format**: The system validates that the request body contains valid JSON.
 
 3. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled.
 
-4. **System tracks metrics**: The system records a "transactions.created" metric for monitoring purposes.
+4. **System processes idempotency key (if present)**: If an `Idempotency-Key` header is present:
+   - System validates the idempotency key format (must be a valid UUID)
+   - System computes a hash of the request body
+   - System checks if a cached response exists for this idempotency key and request hash
+   - If cached response exists: System returns the cached response (HTTP 200) and flow ends
+   - If idempotency key exists with different request hash: System returns HTTP 409 Conflict and flow ends
+   - If idempotency key is new: System continues with transaction creation
 
-5. **System validates input data**: The system validates the provided transaction data:
+5. **System tracks metrics**: The system records a "transactions.created" metric for monitoring purposes.
+
+6. **System validates input data**: The system validates the provided transaction data:
    - Amount must be greater than zero
    - Description must not be null or empty
    - Transaction type must be either EXPENSE or REVENUE
 
-6. **System creates domain object**: The system creates a new Transaction domain object with:
+7. **System creates domain object**: The system creates a new Transaction domain object with:
    - Generated UUID as identifier
    - Current timestamp as creation date
    - Validated amount, description, and type
 
-7. **System persists transaction**: The system saves the transaction to the database through the repository layer.
+8. **System persists transaction**: The system saves the transaction to the database through the repository layer.
 
-8. **System returns success response**: The system returns HTTP 200 with the created transaction object including the assigned ID and timestamp.
+9. **System caches response (if idempotency key present)**: If an idempotency key was provided and transaction creation was successful, the system caches the response (status code and body) associated with the idempotency key and request hash.
+
+10. **System returns success response**: The system returns HTTP 200 with the created transaction object including the assigned ID and timestamp.
 
 ### Alternative Flows
 
@@ -84,6 +94,34 @@
   3. System throws JSON parsing exception
   4. Global exception handler catches the exception
   5. System returns HTTP 400 Bad Request with message about JSON syntax error
+- **Postcondition**: No transaction is created
+
+#### A6: Idempotency Key Returns Cached Response
+- **Trigger**: In step 4, an idempotency key is provided and a cached response exists for the same key and request hash
+- **Steps**:
+  1. System validates idempotency key format (must be valid UUID)
+  2. System computes hash of request body
+  3. System checks idempotency repository for cached response
+  4. System finds cached response matching idempotency key and request hash
+  5. System returns HTTP 200 with cached response (same transaction ID as original request)
+- **Postcondition**: No new transaction is created; original transaction response is returned
+
+#### A7: Idempotency Key Conflict
+- **Trigger**: In step 4, an idempotency key is provided that was previously used with different request data
+- **Steps**:
+  1. System validates idempotency key format (must be valid UUID)
+  2. System computes hash of current request body
+  3. System checks idempotency repository
+  4. System finds that idempotency key exists but with a different request hash
+  5. System returns HTTP 409 Conflict with error message: "Idempotency key already used with different request parameters"
+- **Postcondition**: No transaction is created; original transaction remains unchanged
+
+#### A8: Invalid Idempotency Key Format
+- **Trigger**: In step 4, an idempotency key is provided but it is not a valid UUID format
+- **Steps**:
+  1. System attempts to validate idempotency key format
+  2. System determines key is not a valid UUID
+  3. System returns HTTP 400 Bad Request with error message: "Invalid idempotency key format"
 - **Postcondition**: No transaction is created
 
 ---
@@ -311,6 +349,7 @@ All use cases automatically collect metrics through AOP aspects:
 All use cases follow consistent error handling patterns:
 - **Validation Errors**: HTTP 400 Bad Request
 - **Feature Flag Errors**: HTTP 403 Forbidden
+- **Idempotency Conflicts**: HTTP 409 Conflict
 - **System Errors**: HTTP 500 Internal Server Error
 - **Not Found**: HTTP 404 Not Found
 - **Service Unavailable**: HTTP 503 Service Unavailable

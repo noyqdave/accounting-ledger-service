@@ -46,6 +46,7 @@ mmdc -i logical-view.mmd -o logical-view.png
 - `use-case-retrieval.mmd` - Detailed transaction retrieval scenario
 - `use-case-invalid-data.mmd` - Invalid data handling scenario
 - `use-case-health-check.mmd` - System health check scenario
+- `use-case-idempotency.mmd` - Idempotency key processing scenarios (first request, retry, conflict)
 
 ### C4 Model
 - `c4-context.mmd` - System context diagram showing the system and its relationships with users

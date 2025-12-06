@@ -49,6 +49,7 @@ Feature: Transaction Idempotency
     And the transaction description is "Office supplies"
     And the transaction type is "EXPENSE"
     And I provide the same idempotency key "aa0e8400-e29b-41d4-a716-446655440005"
+    When I send the transaction request with the same idempotency key
     Then the request should be rejected with a conflict error
     And I should receive an error message about the idempotency key conflict
 
@@ -64,6 +65,7 @@ Feature: Transaction Idempotency
     And the transaction description is "Different supplies"
     And the transaction type is "EXPENSE"
     And I provide the same idempotency key "bb0e8400-e29b-41d4-a716-446655440006"
+    When I send the transaction request with the same idempotency key
     Then the request should be rejected with a conflict error
     And I should receive an error message about the idempotency key conflict
 
@@ -79,6 +81,7 @@ Feature: Transaction Idempotency
     And the transaction description is "Office supplies"
     And the transaction type is "REVENUE"
     And I provide the same idempotency key "cc0e8400-e29b-41d4-a716-446655440007"
+    When I send the transaction request with the same idempotency key
     Then the request should be rejected with a conflict error
     And I should receive an error message about the idempotency key conflict
 
@@ -96,6 +99,7 @@ Feature: Transaction Idempotency
     And the transaction description is "Office supplies"
     And the transaction type is "EXPENSE"
     And I provide a different idempotency key "ee0e8400-e29b-41d4-a716-446655440009"
+    When I create the transaction with the updated idempotency key
     Then a new transaction should be created in the ledger
     And the new transaction should have a different identifier than the stored one
 

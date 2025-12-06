@@ -1,19 +1,14 @@
-package com.example.ledger.config;
+package com.example.ledger.application.port;
 
 import java.util.Optional;
 
 /**
- * Service for handling idempotency key operations.
+ * Port for idempotency key operations.
  * 
- * This interface will be implemented to:
- * - Check if an idempotency key exists and has a cached response
- * - Store responses for idempotency keys
- * - Validate idempotency keys
- * 
- * TODO: Implement this service as part of Increment 1 of idempotency implementation.
- * See docs/idempotency-user-stories.md for implementation plan.
+ * This port defines the contract for storing and retrieving idempotency key responses.
+ * Implementations can use in-memory storage, database, or distributed cache.
  */
-public interface IdempotencyService {
+public interface IdempotencyRepositoryPort {
     
     /**
      * Retrieves a cached response for the given idempotency key if it exists
@@ -44,6 +39,16 @@ public interface IdempotencyService {
     boolean isValidKey(String idempotencyKey);
     
     /**
+     * Check if an idempotency key exists with a different request hash.
+     * This is used to detect conflicts (same key, different request).
+     * 
+     * @param idempotencyKey The idempotency key to check
+     * @param requestHash The hash of the current request body
+     * @return true if the key exists with a different hash, false otherwise
+     */
+    boolean hasKeyWithDifferentHash(String idempotencyKey, String requestHash);
+    
+    /**
      * Response data stored for idempotency.
      */
     class IdempotencyResponse {
@@ -64,4 +69,3 @@ public interface IdempotencyService {
         }
     }
 }
-
