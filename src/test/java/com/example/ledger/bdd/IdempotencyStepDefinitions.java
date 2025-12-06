@@ -92,21 +92,51 @@ public class IdempotencyStepDefinitions {
 
     @When("I try to create a transaction with amount {double}")
     public void i_try_to_create_a_transaction_with_amount(Double amount) {
-        // TODO: Update transaction data in shared context with new amount for conflict testing
+        // Update transaction data in shared context with new amount for conflict testing
         // This is used when testing conflicts - same key but different request data
+        // Don't send the request yet - wait for all data to be set
         testContext.getTransactionData().put("amount", amount);
+    }
+    
+    @When("I send the transaction request with the same idempotency key")
+    public void i_send_the_transaction_request_with_the_same_idempotency_key() {
+        // Send the request with the current transaction data and idempotency key from context
+        // This is used after updating transaction data and setting the idempotency key
+        String idempotencyKey = testContext.getIdempotencyKey();
+        var requestSpec = given()
+                .contentType(ContentType.JSON)
+                .body(testContext.getTransactionData());
+        
+        if (idempotencyKey != null) {
+            requestSpec = requestSpec.header("Idempotency-Key", idempotencyKey);
+        }
+        
+        Response response = requestSpec
+                .when()
+                .post("/transactions");
+        
+        testContext.setResponse(response);
     }
 
     @When("I create a transaction with the same amount {double}")
     public void i_create_a_transaction_with_the_same_amount(Double amount) {
-        // TODO: Create a new transaction with same amount but different idempotency key
-        // This is used to test that different keys create independent transactions
+        // Update transaction data with the same amount
+        // The actual request will be sent after the idempotency key is set
         testContext.getTransactionData().put("amount", amount);
-        
+        // Don't send the request yet - wait for the idempotency key to be set
+    }
+    
+    @When("I create the transaction with the updated idempotency key")
+    public void i_create_the_transaction_with_the_updated_idempotency_key() {
+        // Send the request with the current transaction data and idempotency key from context
+        String idempotencyKey = testContext.getIdempotencyKey();
         var requestSpec = given()
                 .contentType(ContentType.JSON)
-                .header("Idempotency-Key", testContext.getIdempotencyKey())
                 .body(testContext.getTransactionData());
+        
+        if (idempotencyKey != null) {
+            requestSpec = requestSpec.header("Idempotency-Key", idempotencyKey);
+        }
         
         Response response = requestSpec
                 .when()

@@ -1,30 +1,31 @@
 package com.example.ledger.config;
 
+import com.example.ledger.adapters.out.idempotency.InMemoryIdempotencyAdapter;
+import com.example.ledger.application.port.IdempotencyRepositoryPort;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Unit tests for IdempotencyService.
+ * Unit tests for IdempotencyRepositoryPort.
  * Inspired by the BDD scenario: "Retry Request with Same Idempotency Key Returns Same Response"
  * 
- * These tests document the expected behavior for idempotency service operations.
+ * These tests document the expected behavior for idempotency repository operations.
  * 
- * STATUS: These tests are currently commented out because IdempotencyService implementation
- * is not yet created. They serve as behavior specifications and should be uncommented
- * and made to pass once the service is implemented.
+ * STATUS: These tests are currently commented out because they serve as behavior specifications.
+ * They can be uncommented and made to pass once ready for unit testing the adapter.
  * 
  * Uses JUnit 4 to match Surefire configuration for Cucumber compatibility.
  */
 @SuppressWarnings("unused")
 public class IdempotencyServiceTest {
 
-    // TODO: Initialize with actual IdempotencyService implementation once created
-    // private IdempotencyService idempotencyService;
+    // TODO: Initialize with actual IdempotencyRepositoryPort implementation once ready
+    // private IdempotencyRepositoryPort idempotencyRepository;
 
     @Before
     public void setUp() {
-        // TODO: Initialize IdempotencyService implementation
-        // Example: idempotencyService = new InMemoryIdempotencyService();
+        // TODO: Initialize IdempotencyRepositoryPort implementation
+        // Example: idempotencyRepository = new InMemoryIdempotencyAdapter();
     }
 
     /**
@@ -40,10 +41,10 @@ public class IdempotencyServiceTest {
         String idempotencyKey = "880e8400-e29b-41d4-a716-446655440003";
         String requestHash = hashRequest(100.00, "Office supplies", "EXPENSE");
 
-        // TODO: Uncomment and implement when IdempotencyService is created
+        // TODO: Uncomment and implement when ready
         // Act
-        // Optional<IdempotencyService.IdempotencyResponse> cachedResponse = 
-        //         idempotencyService.getCachedResponse(idempotencyKey, requestHash);
+        // Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
+        //         idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
 
         // Assert
         // assertFalse(cachedResponse.isPresent(), 
@@ -63,16 +64,16 @@ public class IdempotencyServiceTest {
         String requestHash = hashRequest(100.00, "Office supplies", "EXPENSE");
         String responseBody = "{\"id\":\"123e4567-e89b-12d3-a456-426614174000\",\"amount\":100.00,\"description\":\"Office supplies\",\"type\":\"EXPENSE\"}";
         
-        IdempotencyService.IdempotencyResponse response = 
-                new IdempotencyService.IdempotencyResponse(200, responseBody);
+        IdempotencyRepositoryPort.IdempotencyResponse response = 
+                new IdempotencyRepositoryPort.IdempotencyResponse(200, responseBody);
 
-        // TODO: Uncomment and implement when IdempotencyService is created
+        // TODO: Uncomment and implement when ready
         // Act
-        // idempotencyService.storeResponse(idempotencyKey, requestHash, response);
+        // idempotencyRepository.storeResponse(idempotencyKey, requestHash, response);
 
         // Assert - Verify response was stored (by retrieving it)
-        // Optional<IdempotencyService.IdempotencyResponse> cachedResponse = 
-        //         idempotencyService.getCachedResponse(idempotencyKey, requestHash);
+        // Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
+        //         idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
         // assertTrue(cachedResponse.isPresent(), 
         //         "Response should be stored and retrievable after storing");
         // assertEquals(200, cachedResponse.get().getStatusCode());
@@ -98,16 +99,16 @@ public class IdempotencyServiceTest {
                 "{\"id\":\"%s\",\"amount\":100.00,\"description\":\"Office supplies\",\"type\":\"EXPENSE\"}",
                 transactionId);
         
-        IdempotencyService.IdempotencyResponse originalResponse = 
-                new IdempotencyService.IdempotencyResponse(200, responseBody);
+        IdempotencyRepositoryPort.IdempotencyResponse originalResponse = 
+                new IdempotencyRepositoryPort.IdempotencyResponse(200, responseBody);
 
-        // TODO: Uncomment and implement when IdempotencyService is created
+        // TODO: Uncomment and implement when ready
         // Store the original response (simulating first request)
-        // idempotencyService.storeResponse(idempotencyKey, requestHash, originalResponse);
+        // idempotencyRepository.storeResponse(idempotencyKey, requestHash, originalResponse);
 
         // Act - Retry request with same idempotency key and same request hash
-        // Optional<IdempotencyService.IdempotencyResponse> cachedResponse = 
-        //         idempotencyService.getCachedResponse(idempotencyKey, requestHash);
+        // Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
+        //         idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
 
         // Assert - Should return the same cached response with identical transaction ID
         // assertTrue(cachedResponse.isPresent(), 
@@ -133,17 +134,17 @@ public class IdempotencyServiceTest {
         String originalRequestHash = hashRequest(100.00, "Office supplies", "EXPENSE");
         String originalResponseBody = "{\"id\":\"123e4567-e89b-12d3-a456-426614174000\",\"amount\":100.00,\"description\":\"Office supplies\",\"type\":\"EXPENSE\"}";
         
-        IdempotencyService.IdempotencyResponse originalResponse = 
-                new IdempotencyService.IdempotencyResponse(200, originalResponseBody);
+        IdempotencyRepositoryPort.IdempotencyResponse originalResponse = 
+                new IdempotencyRepositoryPort.IdempotencyResponse(200, originalResponseBody);
 
-        // TODO: Uncomment and implement when IdempotencyService is created
-        // idempotencyService.storeResponse(idempotencyKey, originalRequestHash, originalResponse);
+        // TODO: Uncomment and implement when ready
+        // idempotencyRepository.storeResponse(idempotencyKey, originalRequestHash, originalResponse);
 
         // Act - Request with same key but different request body (different hash)
         String differentRequestHash = hashRequest(200.00, "Office supplies", "EXPENSE"); // Different amount
 
-        // Optional<IdempotencyService.IdempotencyResponse> cachedResponse = 
-        //         idempotencyService.getCachedResponse(idempotencyKey, differentRequestHash);
+        // Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
+        //         idempotencyRepository.getCachedResponse(idempotencyKey, differentRequestHash);
 
         // Assert - Should return empty (indicating conflict, which filter will handle as 409)
         // assertFalse(cachedResponse.isPresent(), 
@@ -162,15 +163,15 @@ public class IdempotencyServiceTest {
         String validKey = "880e8400-e29b-41d4-a716-446655440003"; // Valid UUID format
         String invalidKey = "not-a-valid-uuid";
 
-        // TODO: Uncomment and implement when IdempotencyService is created
+        // TODO: Uncomment and implement when ready
         // Act & Assert
-        // assertTrue(idempotencyService.isValidKey(validKey), 
+        // assertTrue(idempotencyRepository.isValidKey(validKey), 
         //         "Valid UUID format should be accepted");
-        // assertFalse(idempotencyService.isValidKey(invalidKey), 
+        // assertFalse(idempotencyRepository.isValidKey(invalidKey), 
         //         "Invalid UUID format should be rejected");
-        // assertFalse(idempotencyService.isValidKey(null), 
+        // assertFalse(idempotencyRepository.isValidKey(null), 
         //         "Null idempotency key should be rejected");
-        // assertFalse(idempotencyService.isValidKey(""), 
+        // assertFalse(idempotencyRepository.isValidKey(""), 
         //         "Empty idempotency key should be rejected");
     }
 
@@ -178,7 +179,7 @@ public class IdempotencyServiceTest {
      * Helper method to hash request body for request matching.
      * This simulates how request bodies will be hashed for idempotency matching.
      * 
-     * TODO: Replace with actual hashing implementation from IdempotencyService or a utility class.
+     * TODO: Replace with actual hashing implementation from IdempotencyRepositoryPort or a utility class.
      * The actual implementation should use proper cryptographic hashing (e.g., SHA-256)
      * to ensure request bodies are compared accurately.
      */
