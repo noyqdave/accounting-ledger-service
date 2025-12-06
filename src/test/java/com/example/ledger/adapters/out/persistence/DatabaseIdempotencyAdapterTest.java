@@ -1,31 +1,40 @@
-package com.example.ledger.config;
+package com.example.ledger.adapters.out.persistence;
 
-import com.example.ledger.adapters.out.idempotency.InMemoryIdempotencyAdapter;
 import com.example.ledger.application.port.IdempotencyRepositoryPort;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.Optional;
+
+import static org.junit.Assert.*;
 
 /**
- * Unit tests for IdempotencyRepositoryPort.
+ * Unit tests for DatabaseIdempotencyAdapter.
  * Inspired by the BDD scenario: "Retry Request with Same Idempotency Key Returns Same Response"
  * 
- * These tests document the expected behavior for idempotency repository operations.
- * 
- * STATUS: These tests are currently commented out because they serve as behavior specifications.
- * They can be uncommented and made to pass once ready for unit testing the adapter.
+ * These tests verify the database-backed idempotency repository operations.
  * 
  * Uses JUnit 4 to match Surefire configuration for Cucumber compatibility.
  */
-@SuppressWarnings("unused")
-public class IdempotencyServiceTest {
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@TestPropertySource(properties = {
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.datasource.url=jdbc:h2:mem:testdb"
+})
+public class DatabaseIdempotencyAdapterTest {
 
-    // TODO: Initialize with actual IdempotencyRepositoryPort implementation once ready
-    // private IdempotencyRepositoryPort idempotencyRepository;
+    @Autowired
+    private IdempotencyRepositoryPort idempotencyRepository;
 
     @Before
     public void setUp() {
-        // TODO: Initialize IdempotencyRepositoryPort implementation
-        // Example: idempotencyRepository = new InMemoryIdempotencyAdapter();
+        // Database is automatically initialized by Spring Boot Test
     }
 
     /**
@@ -41,14 +50,13 @@ public class IdempotencyServiceTest {
         String idempotencyKey = "880e8400-e29b-41d4-a716-446655440003";
         String requestHash = hashRequest(100.00, "Office supplies", "EXPENSE");
 
-        // TODO: Uncomment and implement when ready
         // Act
-        // Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
-        //         idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
+        Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
+                idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
 
         // Assert
-        // assertFalse(cachedResponse.isPresent(), 
-        //         "First request with new idempotency key should not have cached response");
+        assertFalse("First request with new idempotency key should not have cached response",
+                cachedResponse.isPresent());
     }
 
     /**
@@ -67,17 +75,16 @@ public class IdempotencyServiceTest {
         IdempotencyRepositoryPort.IdempotencyResponse response = 
                 new IdempotencyRepositoryPort.IdempotencyResponse(200, responseBody);
 
-        // TODO: Uncomment and implement when ready
         // Act
-        // idempotencyRepository.storeResponse(idempotencyKey, requestHash, response);
+        idempotencyRepository.storeResponse(idempotencyKey, requestHash, response);
 
         // Assert - Verify response was stored (by retrieving it)
-        // Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
-        //         idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
-        // assertTrue(cachedResponse.isPresent(), 
-        //         "Response should be stored and retrievable after storing");
-        // assertEquals(200, cachedResponse.get().getStatusCode());
-        // assertEquals(responseBody, cachedResponse.get().getResponseBody());
+        Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
+                idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
+        assertTrue("Response should be stored and retrievable after storing",
+                cachedResponse.isPresent());
+        assertEquals(200, cachedResponse.get().getStatusCode());
+        assertEquals(responseBody, cachedResponse.get().getResponseBody());
     }
 
     /**
@@ -102,22 +109,21 @@ public class IdempotencyServiceTest {
         IdempotencyRepositoryPort.IdempotencyResponse originalResponse = 
                 new IdempotencyRepositoryPort.IdempotencyResponse(200, responseBody);
 
-        // TODO: Uncomment and implement when ready
         // Store the original response (simulating first request)
-        // idempotencyRepository.storeResponse(idempotencyKey, requestHash, originalResponse);
+        idempotencyRepository.storeResponse(idempotencyKey, requestHash, originalResponse);
 
         // Act - Retry request with same idempotency key and same request hash
-        // Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
-        //         idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
+        Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
+                idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
 
         // Assert - Should return the same cached response with identical transaction ID
-        // assertTrue(cachedResponse.isPresent(), 
-        //         "Retry request with same idempotency key should return cached response");
-        // assertEquals(200, cachedResponse.get().getStatusCode());
-        // assertEquals(originalResponse.getResponseBody(), cachedResponse.get().getResponseBody(),
-        //         "Cached response should match original response exactly");
-        // assertTrue(cachedResponse.get().getResponseBody().contains(transactionId),
-        //         "Cached response should contain the same transaction ID");
+        assertTrue("Retry request with same idempotency key should return cached response",
+                cachedResponse.isPresent());
+        assertEquals(200, cachedResponse.get().getStatusCode());
+        assertEquals(originalResponse.getResponseBody(), cachedResponse.get().getResponseBody(),
+                "Cached response should match original response exactly");
+        assertTrue("Cached response should contain the same transaction ID",
+                cachedResponse.get().getResponseBody().contains(transactionId));
     }
 
     /**
@@ -137,18 +143,17 @@ public class IdempotencyServiceTest {
         IdempotencyRepositoryPort.IdempotencyResponse originalResponse = 
                 new IdempotencyRepositoryPort.IdempotencyResponse(200, originalResponseBody);
 
-        // TODO: Uncomment and implement when ready
-        // idempotencyRepository.storeResponse(idempotencyKey, originalRequestHash, originalResponse);
+        idempotencyRepository.storeResponse(idempotencyKey, originalRequestHash, originalResponse);
 
         // Act - Request with same key but different request body (different hash)
         String differentRequestHash = hashRequest(200.00, "Office supplies", "EXPENSE"); // Different amount
 
-        // Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
-        //         idempotencyRepository.getCachedResponse(idempotencyKey, differentRequestHash);
+        Optional<IdempotencyRepositoryPort.IdempotencyResponse> cachedResponse = 
+                idempotencyRepository.getCachedResponse(idempotencyKey, differentRequestHash);
 
         // Assert - Should return empty (indicating conflict, which filter will handle as 409)
-        // assertFalse(cachedResponse.isPresent(), 
-        //         "Request with same idempotency key but different request body should not match cached response");
+        assertFalse("Request with same idempotency key but different request body should not match cached response",
+                cachedResponse.isPresent());
     }
 
     /**
@@ -163,16 +168,15 @@ public class IdempotencyServiceTest {
         String validKey = "880e8400-e29b-41d4-a716-446655440003"; // Valid UUID format
         String invalidKey = "not-a-valid-uuid";
 
-        // TODO: Uncomment and implement when ready
         // Act & Assert
-        // assertTrue(idempotencyRepository.isValidKey(validKey), 
-        //         "Valid UUID format should be accepted");
-        // assertFalse(idempotencyRepository.isValidKey(invalidKey), 
-        //         "Invalid UUID format should be rejected");
-        // assertFalse(idempotencyRepository.isValidKey(null), 
-        //         "Null idempotency key should be rejected");
-        // assertFalse(idempotencyRepository.isValidKey(""), 
-        //         "Empty idempotency key should be rejected");
+        assertTrue("Valid UUID format should be accepted",
+                idempotencyRepository.isValidKey(validKey));
+        assertFalse("Invalid UUID format should be rejected",
+                idempotencyRepository.isValidKey(invalidKey));
+        assertFalse("Null idempotency key should be rejected",
+                idempotencyRepository.isValidKey(null));
+        assertFalse("Empty idempotency key should be rejected",
+                idempotencyRepository.isValidKey(""));
     }
 
     /**
