@@ -32,9 +32,14 @@ public class DatabaseIdempotencyAdapterTest {
     @Autowired
     private IdempotencyRepositoryPort idempotencyRepository;
 
+    @Autowired
+    private IdempotencyJpaRepository idempotencyJpaRepository;
+
     @Before
     public void setUp() {
-        // Database is automatically initialized by Spring Boot Test
+        // Clean up database before each test to avoid unique constraint violations
+        // when multiple tests use the same idempotency key and request hash
+        idempotencyJpaRepository.deleteAll();
     }
 
     /**
@@ -120,8 +125,8 @@ public class DatabaseIdempotencyAdapterTest {
         assertTrue("Retry request with same idempotency key should return cached response",
                 cachedResponse.isPresent());
         assertEquals(200, cachedResponse.get().getStatusCode());
-        assertEquals(originalResponse.getResponseBody(), cachedResponse.get().getResponseBody(),
-                "Cached response should match original response exactly");
+        assertEquals("Cached response should match original response exactly",
+                originalResponse.getResponseBody(), cachedResponse.get().getResponseBody());
         assertTrue("Cached response should contain the same transaction ID",
                 cachedResponse.get().getResponseBody().contains(transactionId));
     }
