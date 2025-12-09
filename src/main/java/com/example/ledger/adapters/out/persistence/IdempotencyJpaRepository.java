@@ -11,3 +11,5 @@ public interface IdempotencyJpaRepository extends JpaRepository<IdempotencyEntit
     
     boolean existsByIdempotencyKeyAndRequestHashNot(String idempotencyKey, String requestHash);
 }
+
+
