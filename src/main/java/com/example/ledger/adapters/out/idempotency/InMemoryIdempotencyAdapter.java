@@ -75,11 +75,7 @@ public class InMemoryIdempotencyAdapter implements IdempotencyRepositoryPort {
         // If the key exists but with a different hash, it's a conflict
         return !keyResponses.containsKey(requestHash) && !keyResponses.isEmpty();
     }
-
-    @Override
-    public void deleteExpiredKeys() {
-        // In-memory adapter doesn't track expiration times.
-        // This is a no-op since expiration is only tracked in the database implementation.
-        // The in-memory adapter is kept for reference/testing but is not used in production.
-    }
+    
+    // deleteExpiredKeys() uses default implementation from interface (no-op)
+    // since in-memory adapter doesn't track expiration times
 }

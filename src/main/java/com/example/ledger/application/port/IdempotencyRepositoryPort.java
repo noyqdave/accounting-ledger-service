@@ -51,8 +51,13 @@ public interface IdempotencyRepositoryPort {
     /**
      * Deletes all expired idempotency keys (where expiresAt is before the current time).
      * This is used for automatic cleanup of expired entries.
+     * 
+     * Default implementation is a no-op. Implementations that track expiration
+     * (e.g., database-backed) should override this method.
      */
-    void deleteExpiredKeys();
+    default void deleteExpiredKeys() {
+        // Default no-op implementation for adapters that don't track expiration
+    }
     
     /**
      * Response data stored for idempotency.
