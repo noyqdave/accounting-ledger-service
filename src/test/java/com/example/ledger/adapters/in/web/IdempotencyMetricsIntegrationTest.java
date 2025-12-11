@@ -44,6 +44,7 @@ public class IdempotencyMetricsIntegrationTest {
 
     private double initialRequestsTotal;
     private double initialCacheHits;
+    private double initialConflicts;
 
     @Before
     public void setUp() throws Exception {
@@ -52,6 +53,7 @@ public class IdempotencyMetricsIntegrationTest {
         // the initial value and assert on the increment
         initialRequestsTotal = getMetricValue("idempotency.requests.total");
         initialCacheHits = getMetricValue("idempotency.cache.hits");
+        initialConflicts = getMetricValue("idempotency.conflicts");
     }
 
     private double getMetricValue(String metricName) throws Exception {
@@ -138,5 +140,49 @@ public class IdempotencyMetricsIntegrationTest {
         mockMvc.perform(get("/actuator/metrics/idempotency.cache.hits"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.measurements[0].value").value(initialCacheHits + 1.0));
+    }
+
+    /**
+     * Test: Conflict with same idempotency key but different body should increment idempotency.conflicts counter.
+     *
+     * This completes the metrics acceptance criteria for conflicts.
+     */
+    @Test
+    public void shouldIncrementConflictsMetricWhenConflictDetected() throws Exception {
+        // Arrange - First request creates and caches the response
+        String idempotencyKey = "990e8400-e29b-41d4-a716-446655440005";
+        String originalRequestBody = """
+                {
+                  "amount": 150.00,
+                  "description": "Original request",
+                  "type": "EXPENSE"
+                }
+                """;
+
+        mockMvc.perform(post("/transactions")
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType("application/json")
+                        .content(originalRequestBody))
+                .andExpect(status().isOk());
+
+        // Act - Second request with same key but different body should trigger conflict
+        String conflictingRequestBody = """
+                {
+                  "amount": 200.00,
+                  "description": "Conflicting request",
+                  "type": "EXPENSE"
+                }
+                """;
+
+        mockMvc.perform(post("/transactions")
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType("application/json")
+                        .content(conflictingRequestBody))
+                .andExpect(status().isConflict());
+
+        // Assert - Verify idempotency.conflicts metric was incremented by 1
+        mockMvc.perform(get("/actuator/metrics/idempotency.conflicts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.measurements[0].value").value(initialConflicts + 1.0));
     }
 }
