@@ -76,9 +76,6 @@ public class IdempotencyMetricsIntegrationTest {
 
     /**
      * Test: First request with idempotency key should increment idempotency.requests.total counter.
-     * 
-     * This is the first test in TDD - it should fail because metrics aren't implemented yet.
-     * After implementing metrics, this test should pass.
      */
     @Test
     public void shouldIncrementRequestsTotalMetricWhenIdempotencyKeyIsPresent() throws Exception {
@@ -106,9 +103,6 @@ public class IdempotencyMetricsIntegrationTest {
 
     /**
      * Test: Retry request with same idempotency key should increment idempotency.cache.hits counter.
-     * 
-     * This is the second test in TDD - it should fail because cache hit metrics aren't implemented yet.
-     * After implementing metrics, this test should pass.
      */
     @Test
     public void shouldIncrementCacheHitsMetricWhenCachedResponseIsReturned() throws Exception {
@@ -144,8 +138,6 @@ public class IdempotencyMetricsIntegrationTest {
 
     /**
      * Test: Conflict with same idempotency key but different body should increment idempotency.conflicts counter.
-     *
-     * This completes the metrics acceptance criteria for conflicts.
      */
     @Test
     public void shouldIncrementConflictsMetricWhenConflictDetected() throws Exception {
