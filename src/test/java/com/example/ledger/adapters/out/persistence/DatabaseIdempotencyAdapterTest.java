@@ -10,6 +10,9 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.example.ledger.adapters.out.persistence.entity.IdempotencyEntity;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -426,15 +429,26 @@ public class DatabaseIdempotencyAdapterTest {
 
     /**
      * Helper method to hash request body for request matching.
-     * This simulates how request bodies will be hashed for idempotency matching.
-     * 
-     * TODO: Replace with actual hashing implementation from IdempotencyRepositoryPort or a utility class.
-     * The actual implementation should use proper cryptographic hashing (e.g., SHA-256)
-     * to ensure request bodies are compared accurately.
+     * Uses SHA-256 hashing to match the actual implementation in IdempotencyFilter.
+     * This ensures test hashes match production hashes for accurate testing.
      */
     private String hashRequest(double amount, String description, String type) {
-        // Simple hash simulation - actual implementation will use proper hashing (e.g., SHA-256)
         String requestBody = String.format("amount=%.2f&description=%s&type=%s", amount, description, type);
-        return String.valueOf(requestBody.hashCode());
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(requestBody.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            // Fallback to simple hash code if SHA-256 is unavailable (should never happen)
+            return String.valueOf(requestBody.hashCode());
+        }
     }
 }
