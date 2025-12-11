@@ -428,6 +428,68 @@ public class DatabaseIdempotencyAdapterTest {
     }
 
     /**
+     * Test: Cleanup should delete expired keys.
+     * 
+     * This test verifies that expired idempotency keys are removed during cleanup.
+     */
+    @Test
+    public void shouldDeleteExpiredKeys() {
+        // Arrange - Create expired entity
+        String expiredKey = "expired-key-001";
+        String requestHash = hashRequest(100.00, "Test", "EXPENSE");
+        createExpiredEntity(expiredKey, requestHash);
+        
+        // Act - Call cleanup method
+        idempotencyRepository.deleteExpiredKeys();
+        
+        // Assert - Expired entity should be deleted
+        assertFalse("Expired entity should be deleted",
+                idempotencyJpaRepository.findByIdempotencyKeyAndRequestHash(expiredKey, requestHash).isPresent());
+    }
+    
+    /**
+     * Test: Cleanup should preserve active (non-expired) keys.
+     * 
+     * This test verifies that active idempotency keys are not deleted during cleanup.
+     */
+    @Test
+    public void shouldPreserveActiveKeys() {
+        // Arrange - Create active entity
+        String activeKey = "active-key-001";
+        String requestHash = hashRequest(100.00, "Test", "EXPENSE");
+        createActiveEntity(activeKey, requestHash);
+        
+        // Act - Call cleanup method
+        idempotencyRepository.deleteExpiredKeys();
+        
+        // Assert - Active entity should remain
+        assertTrue("Active entity should remain",
+                idempotencyJpaRepository.findByIdempotencyKeyAndRequestHash(activeKey, requestHash).isPresent());
+    }
+    
+    private void createExpiredEntity(String key, String requestHash) {
+        IdempotencyEntity entity = new IdempotencyEntity();
+        entity.setIdempotencyKey(key);
+        entity.setRequestHash(requestHash);
+        entity.setStatusCode(200);
+        entity.setResponseBody("{\"id\":\"expired\"}");
+        entity.setCreatedAt(LocalDateTime.now().minusHours(25));
+        entity.setExpiresAt(LocalDateTime.now().minusHours(1));
+        idempotencyJpaRepository.save(entity);
+    }
+    
+    private void createActiveEntity(String key, String requestHash) {
+        IdempotencyEntity entity = new IdempotencyEntity();
+        entity.setIdempotencyKey(key);
+        entity.setRequestHash(requestHash);
+        entity.setStatusCode(200);
+        entity.setResponseBody("{\"id\":\"active\"}");
+        entity.setCreatedAt(LocalDateTime.now());
+        entity.setExpiresAt(LocalDateTime.now().plusHours(23));
+        idempotencyJpaRepository.save(entity);
+    }
+
+    /**
      * Helper method to hash request body for request matching.
      * Uses SHA-256 hashing to match the actual implementation in IdempotencyFilter.
      * This ensures test hashes match production hashes for accurate testing.

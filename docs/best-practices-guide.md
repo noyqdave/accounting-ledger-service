@@ -357,6 +357,15 @@ public void shouldReturnEmptyOptionalWhenIdempotencyKeyNotFound() {
 - If tests are failing (red phase)
 - If you're unsure about the design direction
 
+#### ✅ **Refactoring Test Code**
+The "wait until green before refactoring" rule primarily applies to **production code**. For **test code**, you can refactor earlier, but with nuance:
+
+- **Compilation errors**: Refactor immediately if the test isn't running yet (e.g., missing method). You're just improving readability, not changing behavior.
+- **Failing due to missing behavior**: Usually wait until green to ensure the test actually works once implemented.
+- **Test is unclear/complex**: Refactor early if it helps clarify intent. Better to have a clear failing test than a confusing one.
+
+**Best practice**: If a test is so long/complex that it obscures what's being tested, refactor it. The goal is a clear, maintainable test that expresses intent.
+
 ### 6. TDD and Integration Tests
 
 #### ✅ **Correct Approach**

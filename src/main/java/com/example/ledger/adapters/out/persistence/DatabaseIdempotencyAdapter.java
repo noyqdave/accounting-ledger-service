@@ -94,6 +94,11 @@ public class DatabaseIdempotencyAdapter implements IdempotencyRepositoryPort {
         // Check if key exists with a different hash
         return jpaRepository.existsByIdempotencyKeyAndRequestHashNot(idempotencyKey, requestHash);
     }
+
+    @Override
+    public void deleteExpiredKeys() {
+        jpaRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+    }
 }
 
 
