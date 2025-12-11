@@ -490,18 +490,6 @@ public class DatabaseIdempotencyAdapterTest {
     }
 
     /**
-     * TEST CI FAILURE NOTIFICATION - This test intentionally fails to demonstrate
-     * the automated CI failure notification system.
-     * 
-     * TODO: Remove this test after verifying CI notifications work.
-     */
-    @Test
-    public void testCIFailureNotification() {
-        // This test intentionally fails to test CI failure notifications
-        assertTrue("This test intentionally fails to demonstrate CI failure notifications", false);
-    }
-    
-    /**
      * Helper method to hash request body for request matching.
      * Uses SHA-256 hashing to match the actual implementation in IdempotencyFilter.
      * This ensures test hashes match production hashes for accurate testing.
