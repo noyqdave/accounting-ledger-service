@@ -2,6 +2,7 @@ package com.example.ledger.adapters.in.web;
 
 import com.example.ledger.application.port.IdempotencyRepositoryPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,10 +51,14 @@ public class IdempotencyFilter extends OncePerRequestFilter {
 
     private final IdempotencyRepositoryPort idempotencyRepository;
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
 
-    public IdempotencyFilter(IdempotencyRepositoryPort idempotencyRepository, ObjectMapper objectMapper) {
+    public IdempotencyFilter(IdempotencyRepositoryPort idempotencyRepository, 
+                           ObjectMapper objectMapper,
+                           MeterRegistry meterRegistry) {
         this.idempotencyRepository = idempotencyRepository;
         this.objectMapper = objectMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -85,6 +90,9 @@ public class IdempotencyFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Track idempotency request metric
+        meterRegistry.counter("idempotency.requests.total").increment();
+
         // Read request body to compute hash - this will cache it in the wrapper
         // We need to read it through the wrapper's input stream to cache it
         String requestBody = getRequestBody(requestWrapper);
@@ -95,6 +103,9 @@ public class IdempotencyFilter extends OncePerRequestFilter {
                 idempotencyRepository.getCachedResponse(idempotencyKey, requestHash);
         
         if (cachedResponse.isPresent()) {
+            // Track cache hit metric
+            meterRegistry.counter("idempotency.cache.hits").increment();
+            
             // Return cached response
             IdempotencyRepositoryPort.IdempotencyResponse cached = cachedResponse.get();
             response.setStatus(cached.getStatusCode());
@@ -105,6 +116,8 @@ public class IdempotencyFilter extends OncePerRequestFilter {
 
         // Check for conflict (same key, different request)
         if (idempotencyRepository.hasKeyWithDifferentHash(idempotencyKey, requestHash)) {
+            // Track conflict metric
+            meterRegistry.counter("idempotency.conflicts").increment();
             handleConflict(response);
             return;
         }

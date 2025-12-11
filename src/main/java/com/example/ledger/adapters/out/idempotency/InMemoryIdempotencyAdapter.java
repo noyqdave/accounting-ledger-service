@@ -12,9 +12,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * In-memory implementation of IdempotencyRepositoryPort.
  * 
  * This adapter stores idempotency keys and their responses in memory.
- * For production, consider using a database-backed adapter with TTL/expiration.
+ * This is kept for reference/testing but is not used in production.
+ * The DatabaseIdempotencyAdapter is the primary implementation.
  */
-@Component
+// @Component - Disabled in favor of DatabaseIdempotencyAdapter
 public class InMemoryIdempotencyAdapter implements IdempotencyRepositoryPort {
 
     // In-memory storage: key -> (requestHash -> response)
