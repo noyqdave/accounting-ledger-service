@@ -116,6 +116,8 @@ public class IdempotencyFilter extends OncePerRequestFilter {
 
         // Check for conflict (same key, different request)
         if (idempotencyRepository.hasKeyWithDifferentHash(idempotencyKey, requestHash)) {
+            // Track conflict metric
+            meterRegistry.counter("idempotency.conflicts").increment();
             handleConflict(response);
             return;
         }
