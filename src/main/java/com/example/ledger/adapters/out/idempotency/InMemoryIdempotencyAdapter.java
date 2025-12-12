@@ -76,6 +76,9 @@ public class InMemoryIdempotencyAdapter implements IdempotencyRepositoryPort {
         return !keyResponses.containsKey(requestHash) && !keyResponses.isEmpty();
     }
     
-    // deleteExpiredKeys() uses default implementation from interface (no-op)
-    // since in-memory adapter doesn't track expiration times
+    @Override
+    public void deleteExpiredKeys() {
+        // No-op for in-memory adapter since it doesn't track expiration times
+        // In-memory storage is cleared on application restart anyway
+    }
 }

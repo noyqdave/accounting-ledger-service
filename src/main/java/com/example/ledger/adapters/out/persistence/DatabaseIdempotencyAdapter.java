@@ -2,7 +2,6 @@ package com.example.ledger.adapters.out.persistence;
 
 import com.example.ledger.adapters.out.persistence.entity.IdempotencyEntity;
 import com.example.ledger.application.port.IdempotencyRepositoryPort;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -12,19 +11,18 @@ import java.util.UUID;
 /**
  * Database-backed implementation of IdempotencyRepositoryPort.
  * 
- * This adapter stores idempotency keys and their responses in the database.
- * Responses are stored with expiration times (default 24 hours) for automatic cleanup.
+ * This adapter stores idempotency keys and their responses in a database table.
+ * It handles expiration checking and cleanup of expired keys.
  */
 @Component
-@Primary
 public class DatabaseIdempotencyAdapter implements IdempotencyRepositoryPort {
 
     private static final int DEFAULT_TTL_HOURS = 24;
+    
+    private final IdempotencyJpaRepository idempotencyJpaRepository;
 
-    private final IdempotencyJpaRepository jpaRepository;
-
-    public DatabaseIdempotencyAdapter(IdempotencyJpaRepository jpaRepository) {
-        this.jpaRepository = jpaRepository;
+    public DatabaseIdempotencyAdapter(IdempotencyJpaRepository idempotencyJpaRepository) {
+        this.idempotencyJpaRepository = idempotencyJpaRepository;
     }
 
     @Override
@@ -33,21 +31,27 @@ public class DatabaseIdempotencyAdapter implements IdempotencyRepositoryPort {
             return Optional.empty();
         }
 
-        Optional<IdempotencyEntity> entity = jpaRepository.findByIdempotencyKeyAndRequestHash(idempotencyKey, requestHash);
-        
-        if (entity.isEmpty()) {
+        Optional<IdempotencyEntity> entityOpt = idempotencyJpaRepository
+                .findByIdempotencyKeyAndRequestHash(idempotencyKey, requestHash);
+
+        if (entityOpt.isEmpty()) {
             return Optional.empty();
         }
 
-        IdempotencyEntity found = entity.get();
+        IdempotencyEntity entity = entityOpt.get();
         
-        // Check if expired
-        if (found.getExpiresAt().isBefore(LocalDateTime.now())) {
-            jpaRepository.delete(found);
+        // Check if expired - if so, delete and return empty
+        if (entity.getExpiresAt().isBefore(LocalDateTime.now())) {
+            idempotencyJpaRepository.delete(entity);
             return Optional.empty();
         }
 
-        return Optional.of(new IdempotencyResponse(found.getStatusCode(), found.getResponseBody()));
+        // Return cached response
+        IdempotencyResponse response = new IdempotencyResponse(
+                entity.getStatusCode(),
+                entity.getResponseBody()
+        );
+        return Optional.of(response);
     }
 
     @Override
@@ -59,15 +63,27 @@ public class DatabaseIdempotencyAdapter implements IdempotencyRepositoryPort {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = now.plusHours(DEFAULT_TTL_HOURS);
 
-        IdempotencyEntity entity = new IdempotencyEntity();
-        entity.setIdempotencyKey(idempotencyKey);
-        entity.setRequestHash(requestHash);
+        // Check if entity already exists
+        Optional<IdempotencyEntity> existingEntityOpt = idempotencyJpaRepository
+                .findByIdempotencyKeyAndRequestHash(idempotencyKey, requestHash);
+
+        IdempotencyEntity entity;
+        if (existingEntityOpt.isPresent()) {
+            // Update existing entity
+            entity = existingEntityOpt.get();
+        } else {
+            // Create new entity
+            entity = new IdempotencyEntity();
+            entity.setIdempotencyKey(idempotencyKey);
+            entity.setRequestHash(requestHash);
+            entity.setCreatedAt(now);
+        }
+
         entity.setStatusCode(response.getStatusCode());
         entity.setResponseBody(response.getResponseBody());
-        entity.setCreatedAt(now);
         entity.setExpiresAt(expiresAt);
 
-        jpaRepository.save(entity);
+        idempotencyJpaRepository.save(entity);
     }
 
     @Override
@@ -92,14 +108,12 @@ public class DatabaseIdempotencyAdapter implements IdempotencyRepositoryPort {
         }
 
         // Check if key exists with a different hash
-        return jpaRepository.existsByIdempotencyKeyAndRequestHashNot(idempotencyKey, requestHash);
+        return idempotencyJpaRepository.existsByIdempotencyKeyAndRequestHashNot(idempotencyKey, requestHash);
     }
 
     @Override
     public void deleteExpiredKeys() {
-        jpaRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        idempotencyJpaRepository.deleteByExpiresAtBefore(now);
     }
 }
-
-
-

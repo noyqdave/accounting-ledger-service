@@ -1,4 +1,4 @@
-package com.example.ledger.config;
+package com.example.ledger.adapters.out.scheduling;
 
 import com.example.ledger.application.port.IdempotencyRepositoryPort;
 import org.slf4j.Logger;
@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 
 /**
  * Scheduled task for cleaning up expired idempotency keys.
+ * 
+ * This is an outbound infrastructure adapter that uses Spring's scheduling
+ * mechanism to periodically trigger cleanup operations via the application port.
  * 
  * Runs periodically to delete expired idempotency keys from the database,
  * preventing unbounded growth and maintaining database health.

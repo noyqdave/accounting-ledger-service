@@ -49,15 +49,10 @@ public interface IdempotencyRepositoryPort {
     boolean hasKeyWithDifferentHash(String idempotencyKey, String requestHash);
     
     /**
-     * Deletes all expired idempotency keys (where expiresAt is before the current time).
-     * This is used for automatic cleanup of expired entries.
-     * 
-     * Default implementation is a no-op. Implementations that track expiration
-     * (e.g., database-backed) should override this method.
+     * Deletes all expired idempotency keys from storage.
+     * This method is used by scheduled cleanup tasks to maintain database health.
      */
-    default void deleteExpiredKeys() {
-        // Default no-op implementation for adapters that don't track expiration
-    }
+    void deleteExpiredKeys();
     
     /**
      * Response data stored for idempotency.

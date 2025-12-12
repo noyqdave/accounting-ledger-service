@@ -1,5 +1,6 @@
 package com.example.ledger.config;
 
+import com.example.ledger.adapters.out.scheduling.IdempotencyCleanupScheduler;
 import com.example.ledger.application.port.IdempotencyRepositoryPort;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,8 +13,8 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for IdempotencyCleanupScheduler.
  * 
- * Following TDD: This test is written first and should fail because
- * the IdempotencyCleanupScheduler class doesn't exist yet.
+ * Tests verify that the scheduler correctly calls the repository port
+ * and handles exceptions gracefully.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class IdempotencyCleanupSchedulerTest {
