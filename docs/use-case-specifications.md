@@ -329,13 +329,74 @@
 
 ---
 
+## UC-006: Cleanup Expired Idempotency Keys
+
+### Use Case Information
+- **Use Case ID**: UC-006
+- **Use Case Name**: Cleanup Expired Idempotency Keys
+- **Primary Actor**: System (Scheduled Task)
+- **Secondary Actors**: None
+- **Preconditions**: 
+  - Application is running
+  - Scheduling is enabled (`@EnableScheduling` in `LedgerServiceApplication`)
+  - Idempotency repository is accessible
+- **Postconditions**: 
+  - Expired idempotency keys are deleted from storage
+  - Database size is maintained within bounds
+  - Cleanup operation is logged
+
+### Basic Flow
+1. **Scheduled task triggers**: The `IdempotencyCleanupScheduler` runs automatically every hour (3600000 milliseconds) via Spring's `@Scheduled` annotation.
+
+2. **System logs cleanup start**: The system logs an informational message indicating that scheduled cleanup of expired idempotency keys has started.
+
+3. **System calls cleanup method**: The system calls `IdempotencyRepositoryPort.deleteExpiredKeys()` to remove expired keys.
+
+4. **Repository deletes expired keys**: The repository adapter (e.g., `DatabaseIdempotencyAdapter`) executes a database query to delete all idempotency keys where `expiresAt` is before the current time.
+
+5. **System logs cleanup completion**: The system logs an informational message with the duration of the cleanup operation.
+
+6. **System continues normal operation**: The cleanup operation completes without affecting normal request processing.
+
+### Alternative Flows
+
+#### A1: Cleanup Error
+- **Trigger**: In step 3 or 4, an error occurs during cleanup (e.g., database connection issue)
+- **Steps**:
+  1. System attempts to delete expired keys
+  2. An exception is thrown (e.g., database connection failure)
+  3. System catches the exception in the scheduler
+  4. System logs an error message with the exception details and duration
+  5. System continues normal operation (cleanup failure doesn't affect request processing)
+- **Postcondition**: Expired keys remain in storage until next cleanup attempt
+
+#### A2: No Expired Keys
+- **Trigger**: In step 4, there are no expired keys to delete
+- **Steps**:
+  1. System executes cleanup query
+  2. Database query returns zero rows to delete
+  3. System logs cleanup completion with zero deletions
+  4. System continues normal operation
+- **Postcondition**: No keys are deleted (normal operation when no keys are expired)
+
+### Notes
+- **Frequency**: Cleanup runs every hour by default (configurable via `@Scheduled` annotation)
+- **Non-Blocking**: Cleanup runs in background and doesn't block request processing
+- **Idempotent**: Multiple cleanup runs are safe (deleting already-deleted keys has no effect)
+- **TTL**: Idempotency keys expire after 24 hours by default (configurable)
+- **Location**: Scheduler is located in `adapters/out/scheduling/IdempotencyCleanupScheduler`
+- **Port Method**: Uses `IdempotencyRepositoryPort.deleteExpiredKeys()` interface method
+
+---
+
 ## Cross-Cutting Concerns
 
 ### Metrics Collection
 All use cases automatically collect metrics through AOP aspects:
-- **UC-001**: `transactions.created` counter
+- **UC-001**: `transactions.created` counter, `idempotency.requests.total` (if idempotency key present), `idempotency.cache.hits` (if cached), `idempotency.conflicts` (if conflict detected)
 - **UC-002**: `transactions.fetched` counter
 - **UC-003**: `health.checks` counter (if configured)
+- **UC-006**: No metrics collected (background maintenance task)
 - **All**: `http.server.requests` metrics (Spring Boot default)
 
 ### Feature Flag Management
@@ -344,6 +405,7 @@ All use cases automatically collect metrics through AOP aspects:
 - **UC-003**: No feature flag (always available)
 - **UC-004**: No feature flag (always available)
 - **UC-005**: No feature flag (always available)
+- **UC-006**: No feature flag (always runs when scheduling is enabled)
 
 ### Error Handling
 All use cases follow consistent error handling patterns:
