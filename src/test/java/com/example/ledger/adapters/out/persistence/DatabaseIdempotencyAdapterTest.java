@@ -30,7 +30,9 @@ import static org.junit.Assert.*;
 @SpringBootTest
 @TestPropertySource(properties = {
     "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.datasource.url=jdbc:h2:mem:testdb"
+    "spring.datasource.url=jdbc:h2:mem:testdb",
+    "spring.datasource.username=sa",
+    "spring.datasource.password="
 })
 public class DatabaseIdempotencyAdapterTest {
 
