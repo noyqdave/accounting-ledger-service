@@ -261,7 +261,51 @@ public String doSomething() {
 }
 ```
 
-### 2. One Test at a Time
+### 2. Streamlined TDD with AI Assistance
+
+#### ✅ **Efficient Approach for AI-Paired Programming**
+
+When working with AI assistants, you can streamline the TDD cycle for simple, obvious cases:
+
+**For Simple Cases (Skip Red Phase Verification):**
+- Write the test
+- Immediately write minimal code to make it pass
+- Verify the test passes (Green phase)
+- Refactor if needed
+
+**When to Still Verify Red Phase:**
+- Complex tests with uncertain behavior
+- Tests that might unexpectedly pass
+- When you want to verify the test fails for the right reason
+- Learning/teaching scenarios where the full cycle is valuable
+
+**Rationale:**
+- For simple cases (e.g., "create a class and call a method"), verifying the red phase is redundant
+- AI assistants can confidently write both test and implementation
+- Focus on value: get to green faster and iterate
+- Still follows TDD principles: test-first, minimal implementation
+
+#### ✅ **Example: Streamlined Approach**
+```java
+// Step 1: Write test (AI knows it will fail, skips verification)
+@Test
+public void shouldCallDeleteExpiredKeys() {
+    scheduler.cleanupExpiredKeys();
+    verify(repository).deleteExpiredKeys();
+}
+
+// Step 2: Immediately write minimal code to pass
+@Component
+public class IdempotencyCleanupScheduler {
+    public void cleanupExpiredKeys() {
+        repository.deleteExpiredKeys();
+    }
+}
+
+// Step 3: Verify test passes, then refactor (add logging, @Scheduled, etc.)
+```
+
+### 3. One Test at a Time
 
 #### ✅ **Correct Approach**
 - Write one failing test
@@ -294,7 +338,7 @@ public void shouldHandleSecondCase() {
 }
 ```
 
-### 3. Communicating TDD Intent
+### 4. Communicating TDD Intent
 
 #### ✅ **How to Request TDD Workflow**
 
@@ -315,7 +359,7 @@ When requesting features, explicitly state:
 Let's start with test #1: [describe the first test case]"
 ```
 
-### 4. Test Quality in TDD
+### 5. Test Quality in TDD
 
 #### ✅ **Good TDD Tests**
 - **Specific**: Test one behavior at a time
@@ -338,7 +382,7 @@ public void shouldReturnEmptyOptionalWhenIdempotencyKeyNotFound() {
 }
 ```
 
-### 5. TDD Workflow Best Practices
+### 6. TDD Workflow Best Practices
 
 #### ✅ **Incremental Development**
 - Start with the simplest test case
@@ -366,7 +410,7 @@ The "wait until green before refactoring" rule primarily applies to **production
 
 **Best practice**: If a test is so long/complex that it obscures what's being tested, refactor it. The goal is a clear, maintainable test that expresses intent.
 
-### 6. TDD and Integration Tests
+### 7. TDD and Integration Tests
 
 #### ✅ **Correct Approach**
 - Use TDD for unit tests (fast feedback)
@@ -378,7 +422,7 @@ The "wait until green before refactoring" rule primarily applies to **production
 2. **Integration Tests**: Test component interactions
 3. **BDD Scenarios**: Test end-to-end behavior from user perspective
 
-### 7. Testing Framework: JUnit 4
+### 8. Testing Framework: JUnit 4
 
 #### ✅ **Correct Approach**
 - **Use JUnit 4** for all tests in this project
