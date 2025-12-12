@@ -22,8 +22,14 @@ When a feature flag is disabled, the FeatureFlagFilter intercepts the request be
 5. **Input Validation**: Domain model validates business rules
 6. **Business Logic**: Application services execute use cases
 7. **Data Persistence**: Repository adapters handle database operations
-8. **Response Caching** (if idempotency key present): Response is cached for future retry requests
+8. **Response Caching** (if idempotency key present): Response is cached with expiration time (default 24 hours) for future retry requests
 9. **Response Mapping**: Domain objects returned to clients
+
+### Background Processing
+- **Scheduled Cleanup**: IdempotencyCleanupScheduler runs every hour to delete expired idempotency keys
+  - Calls `IdempotencyRepositoryPort.deleteExpiredKeys()`
+  - Logs cleanup operations with duration
+  - Handles errors gracefully without affecting normal operations
 
 ### Error Handling
 - **Global Exception Handler**: Centralized error processing

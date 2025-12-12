@@ -2,7 +2,7 @@
 
 ## Overview
 
-Currently, the transaction creation endpoint is **not idempotent**. If a client retries a request (e.g., due to network timeout), it will create duplicate transactions. This document outlines what needs to be implemented to add idempotency support.
+The transaction creation endpoint **supports idempotency** through the `Idempotency-Key` header. This allows clients to safely retry requests without creating duplicate transactions. This document describes the implementation and how it works.
 
 ## What is Idempotency?
 
@@ -177,8 +177,13 @@ CREATE TABLE idempotency_keys (
 ## Cleanup Strategy
 
 - **Scheduled Task**: Periodically delete expired idempotency keys
-- **On Read**: Check expiration, delete if expired
+  - Implemented in `IdempotencyCleanupScheduler` (located in `adapters/out/scheduling/`)
+  - Runs every hour using Spring's `@Scheduled` annotation
+  - Calls `IdempotencyRepositoryPort.deleteExpiredKeys()` method
+  - Logs cleanup operations for monitoring
+- **On Read**: Check expiration, delete if expired (implemented in `DatabaseIdempotencyAdapter.getCachedResponse()`)
 - **TTL**: Typically 24 hours (align with client retry windows)
+- **Scheduling Enabled**: `@EnableScheduling` annotation added to `LedgerServiceApplication`
 
 ## Error Responses
 

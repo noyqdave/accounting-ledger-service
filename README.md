@@ -13,10 +13,12 @@ The Accounting Ledger Service provides a RESTful API for creating and retrieving
 ## Features
 
 - **Transaction Management**: Create and retrieve financial transactions (expenses and revenue)
+- **Idempotency Support**: Safe retry handling with idempotency keys to prevent duplicate transactions
 - **Feature Flags**: Runtime control of features via configuration
 - **Metrics & Observability**: Built-in metrics collection and health checks
 - **API Documentation**: OpenAPI/Swagger documentation
 - **BDD Testing**: Behavior-driven development with Cucumber
+- **Scheduled Tasks**: Automatic cleanup of expired idempotency keys
 
 ## Architecture
 
@@ -93,6 +95,7 @@ curl http://localhost:8080/actuator/health
 ### Create Transaction
 ```http
 POST /transactions
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
 Content-Type: application/json
 
 {
@@ -101,6 +104,8 @@ Content-Type: application/json
   "type": "EXPENSE"
 }
 ```
+
+**Idempotency Key** (optional): Include an `Idempotency-Key` header with a UUID to safely retry requests. If the same key and request are sent again, the original response is returned without creating a duplicate transaction.
 
 ### Get All Transactions
 ```http
@@ -141,9 +146,14 @@ mvn test -Dtest=CucumberTestRunner
 src/
 ├── main/java/com/example/ledger/
 │   ├── adapters/              # Infrastructure adapters
-│   │   ├── in/web/           # REST controllers
-│   │   └── out/persistence/  # Database adapters
-│   ├── application/usecase/  # Application services
+│   │   ├── in/web/           # REST controllers and filters
+│   │   └── out/              # Outbound adapters
+│   │       ├── persistence/  # Database adapters
+│   │       ├── idempotency/  # Idempotency storage adapters
+│   │       └── scheduling/   # Scheduled task adapters
+│   ├── application/          # Application layer
+│   │   ├── usecase/          # Application services
+│   │   └── port/             # Application ports
 │   ├── domain/               # Domain models and ports
 │   └── config/               # Configuration and cross-cutting concerns
 └── test/

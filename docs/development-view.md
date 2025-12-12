@@ -74,9 +74,14 @@ graph TB
 - **Purpose**: External system integration and persistence
 - **Dependencies**: Application and Domain layers
 - **Key Classes**:
-  - `TransactionController`: REST API controller
-  - `TransactionRepositoryAdapter`: JPA repository implementation
+  - `TransactionController`: REST API controller (inbound adapter)
+  - `IdempotencyFilter`: HTTP filter for idempotency key processing (inbound adapter)
+  - `TransactionRepositoryAdapter`: JPA repository implementation (outbound adapter)
+  - `DatabaseIdempotencyAdapter`: Database-backed idempotency storage (outbound adapter)
+  - `InMemoryIdempotencyAdapter`: In-memory idempotency storage (outbound adapter)
+  - `IdempotencyCleanupScheduler`: Scheduled task for cleaning expired keys (outbound adapter)
   - `TransactionEntity`: Database entity mapping
+  - `IdempotencyEntity`: Idempotency key database entity
 
 ### Configuration Layer (`config/`)
 - **Purpose**: Cross-cutting concerns and system configuration
@@ -87,6 +92,14 @@ graph TB
   - `FeatureFlagFilter`: HTTP filter for feature flag enforcement
   - `MetricsAspect`: AOP for metrics collection
   - `GlobalExceptionHandler`: Centralized error handling
+
+### Application Layer (`application/port/`)
+- **Purpose**: Application ports defining contracts for external systems
+- **Dependencies**: Domain layer only
+- **Key Interfaces**:
+  - `TransactionRepositoryPort`: Repository contract for transaction persistence
+  - `IdempotencyRepositoryPort`: Repository contract for idempotency key storage
+    - Methods: `getCachedResponse()`, `storeResponse()`, `isValidKey()`, `hasKeyWithDifferentHash()`, `deleteExpiredKeys()`
 
 ## Build Configuration
 
@@ -120,12 +133,22 @@ src/
 src/test/java/com/example/ledger/
 ├── adapters/in/web/
 │   ├── TransactionControllerTest.java
-│   └── TransactionMetricsIntegrationTest.java
+│   ├── TransactionControllerIdempotencyTest.java
+│   ├── TransactionMetricsIntegrationTest.java
+│   └── IdempotencyMetricsIntegrationTest.java
+├── adapters/out/persistence/
+│   └── DatabaseIdempotencyAdapterTest.java
 ├── application/usecase/
 │   ├── CreateTransactionServiceTest.java
 │   └── GetAllTransactionsServiceTest.java
-└── domain/model/
-    └── TransactionTest.java
+├── config/
+│   └── IdempotencyCleanupSchedulerTest.java
+├── domain/model/
+│   └── TransactionTest.java
+└── bdd/
+    ├── CucumberTestRunner.java
+    ├── TransactionStepDefinitions.java
+    └── IdempotencyStepDefinitions.java
 ```
 
 ### Test Types
@@ -133,6 +156,14 @@ src/test/java/com/example/ledger/
 - **Integration Tests**: Controller endpoints and repository interactions
 - **Feature Flag Tests**: Filter behavior validation with configurable service
 - **Metrics Tests**: AOP metrics collection validation
+- **Idempotency Tests**: Idempotency key processing, caching, and conflict detection
+- **BDD Tests**: Cucumber feature files with step definitions for behavior validation
+- **Scheduler Tests**: Scheduled task execution and error handling
+
+### Test Configuration
+- **Test Profile**: Tests use `@ActiveProfiles("test")` to load `application-test.yml`
+- **Database**: H2 in-memory database configured in test profile
+- **Isolation**: Each test class uses its own Spring context for isolation
 
 ## Development Guidelines
 

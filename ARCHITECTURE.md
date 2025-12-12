@@ -21,14 +21,19 @@ The logical view shows the system's decomposition into key abstractions and thei
 - **GetAllTransactionsUseCase**: Interface for retrieving all transactions
 - **GetAllTransactionsService**: Implementation of transaction retrieval logic
 - **IdempotencyRepositoryPort**: Interface defining idempotency key storage contract
+  - Methods: `getCachedResponse()`, `storeResponse()`, `isValidKey()`, `hasKeyWithDifferentHash()`, `deleteExpiredKeys()`
 
 ### Infrastructure Layer
 - **TransactionController**: REST API controller (Inbound Adapter)
 - **IdempotencyFilter**: HTTP filter for idempotency key processing (Inbound Adapter)
 - **TransactionRepositoryAdapter**: JPA repository adapter (Outbound Adapter)
+- **DatabaseIdempotencyAdapter**: Database-backed idempotency key storage adapter (Outbound Adapter)
 - **InMemoryIdempotencyAdapter**: In-memory idempotency key storage adapter (Outbound Adapter)
+- **IdempotencyCleanupScheduler**: Scheduled task for cleaning expired idempotency keys (Outbound Adapter)
 - **TransactionEntity**: JPA entity for database persistence
+- **IdempotencyEntity**: JPA entity for idempotency key storage
 - **TransactionJpaRepository**: Spring Data JPA repository
+- **IdempotencyJpaRepository**: Spring Data JPA repository for idempotency keys
 
 ### Configuration Layer
 - **FeatureFlagService**: Interface for feature flag checking
@@ -36,6 +41,7 @@ The logical view shows the system's decomposition into key abstractions and thei
 - **FeatureFlagFilter**: HTTP filter for feature flag enforcement at request level
 - **MetricsAspect**: AOP aspect for metrics collection
 - **GlobalExceptionHandler**: Global exception handling
+- **LedgerServiceApplication**: Main application class with `@EnableScheduling` for scheduled tasks
 
 ## 2. Process View
 
@@ -45,7 +51,7 @@ The process view illustrates the runtime behavior and interactions between compo
 1. **HTTP Request** → IdempotencyFilter intercepts request (if Idempotency-Key header present)
 2. **Idempotency Check** (if key present) → IdempotencyFilter checks for cached response or conflicts via IdempotencyRepositoryPort
 3. **Cached Response** (if found) → Return cached response immediately, flow ends
-4. **Conflict Detection** (if same key, different request) → Return 409 Conflict, flow ends
+4. **Conflict Detection** (if same key, different request) → Return 409 Conflict, increment "idempotency.conflicts" metric, flow ends
 5. **Feature Flag Check** → FeatureFlagFilter validates "create-transaction" flag via FeatureFlagService
 6. **Request Forwarding** → If enabled, request proceeds to TransactionController
 7. **Metrics Tracking** → MetricsAspect tracks "transactions.created" metric
@@ -55,8 +61,15 @@ The process view illustrates the runtime behavior and interactions between compo
 11. **Entity Mapping** → Transaction → TransactionEntity
 12. **Database Persistence** → TransactionJpaRepository.save()
 13. **Response Mapping** → TransactionEntity → Transaction
-14. **Response Caching** (if idempotency key present) → IdempotencyFilter caches response via IdempotencyRepositoryPort
+14. **Response Caching** (if idempotency key present) → IdempotencyFilter caches response via IdempotencyRepositoryPort with TTL (default 24 hours)
 15. **HTTP Response** → Transaction object returned
+
+### Idempotency Cleanup Flow (Background Process)
+1. **Scheduled Task** → IdempotencyCleanupScheduler runs every hour (via `@Scheduled`)
+2. **Cleanup Execution** → Calls `IdempotencyRepositoryPort.deleteExpiredKeys()`
+3. **Database Query** → IdempotencyJpaRepository.deleteByExpiresAtBefore() removes expired keys
+4. **Logging** → Cleanup operation logged with duration for monitoring
+5. **Error Handling** → Exceptions caught and logged, preventing scheduler failure
 
 ### Transaction Retrieval Flow
 1. **HTTP Request** → FeatureFlagFilter intercepts request
@@ -99,20 +112,32 @@ The development view shows the module organization and dependencies.
 ### Package Structure
 ```
 com.example.ledger/
-├── LedgerServiceApplication.java          # Main application class
+├── LedgerServiceApplication.java          # Main application class (@EnableScheduling)
 ├── adapters/
 │   ├── in/web/                           # Inbound adapters
 │   │   ├── TransactionController.java     # REST controller
+│   │   ├── IdempotencyFilter.java        # HTTP filter for idempotency
 │   │   └── dto/                          # Data transfer objects
-│   └── out/persistence/                  # Outbound adapters
-│       ├── TransactionRepositoryAdapter.java
-│       └── entity/
-│           └── TransactionEntity.java     # JPA entity
-├── application/usecase/                   # Application services
-│   ├── CreateTransactionService.java
-│   ├── CreateTransactionUseCase.java
-│   ├── GetAllTransactionsService.java
-│   └── GetAllTransactionsUseCase.java
+│   └── out/                              # Outbound adapters
+│       ├── persistence/                  # Persistence adapters
+│       │   ├── TransactionRepositoryAdapter.java
+│       │   ├── DatabaseIdempotencyAdapter.java
+│       │   └── entity/
+│       │       ├── TransactionEntity.java
+│       │       └── IdempotencyEntity.java
+│       ├── idempotency/                  # Idempotency adapters
+│       │   └── InMemoryIdempotencyAdapter.java
+│       └── scheduling/                   # Scheduling adapters
+│           └── IdempotencyCleanupScheduler.java
+├── application/
+│   ├── usecase/                          # Application services
+│   │   ├── CreateTransactionService.java
+│   │   ├── CreateTransactionUseCase.java
+│   │   ├── GetAllTransactionsService.java
+│   │   └── GetAllTransactionsUseCase.java
+│   └── port/                            # Application ports
+│       ├── TransactionRepositoryPort.java
+│       └── IdempotencyRepositoryPort.java
 ├── domain/                               # Domain layer
 │   ├── model/
 │   │   ├── Transaction.java              # Domain entity
