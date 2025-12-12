@@ -23,9 +23,10 @@
 
 4. **System processes idempotency key (if present)**: If an `Idempotency-Key` header is present:
    - System validates the idempotency key format (must be a valid UUID)
-   - System computes a hash of the request body
+   - System computes a SHA-256 hash of the request body (JSON)
    - System checks if a cached response exists for this idempotency key and request hash
-   - If cached response exists: System returns the cached response (HTTP 200) and flow ends
+   - If cached response exists and key is not expired: System returns the cached response (HTTP 200) and flow ends
+   - If cached response exists but key is expired: System deletes the expired key and continues with transaction creation
    - If idempotency key exists with different request hash: System returns HTTP 409 Conflict and flow ends
    - If idempotency key is new: System continues with transaction creation
 
@@ -43,7 +44,7 @@
 
 8. **System persists transaction**: The system saves the transaction to the database through the repository layer.
 
-9. **System caches response (if idempotency key present)**: If an idempotency key was provided and transaction creation was successful, the system caches the response (status code and body) associated with the idempotency key and request hash.
+9. **System caches response (if idempotency key present and successful)**: If an idempotency key was provided and transaction creation was successful (HTTP 200), the system caches the response (status code and body) associated with the idempotency key and request hash with a TTL (default 24 hours). If the response is not successful (e.g., HTTP 400, 500), the response is not cached, allowing retries to attempt the operation again.
 
 10. **System returns success response**: The system returns HTTP 200 with the created transaction object including the assigned ID and timestamp.
 
@@ -84,7 +85,8 @@
   3. System throws database exception
   4. Global exception handler catches the exception
   5. System returns HTTP 500 Internal Server Error with generic error message
-- **Postcondition**: No transaction is created
+  6. If idempotency key was present, response is not cached (only successful responses are cached)
+- **Postcondition**: No transaction is created; idempotency key remains unused, allowing retry
 
 #### A5: Malformed Request
 - **Trigger**: In step 2, the request body contains invalid JSON syntax
@@ -100,11 +102,23 @@
 - **Trigger**: In step 4, an idempotency key is provided and a cached response exists for the same key and request hash
 - **Steps**:
   1. System validates idempotency key format (must be valid UUID)
-  2. System computes hash of request body
+  2. System computes SHA-256 hash of request body
   3. System checks idempotency repository for cached response
   4. System finds cached response matching idempotency key and request hash
-  5. System returns HTTP 200 with cached response (same transaction ID as original request)
+  5. System verifies the key is not expired (if expired, deletes key and follows basic flow)
+  6. System returns HTTP 200 with cached response (same transaction ID as original request)
 - **Postcondition**: No new transaction is created; original transaction response is returned
+
+#### A9: Expired Idempotency Key Accessed
+- **Trigger**: In step 4, an idempotency key is provided and a cached response exists but the key has expired
+- **Steps**:
+  1. System validates idempotency key format (must be valid UUID)
+  2. System computes SHA-256 hash of request body
+  3. System checks idempotency repository for cached response
+  4. System finds cached response but determines key is expired (expiresAt < current time)
+  5. System deletes the expired key from storage (on-read cleanup)
+  6. System continues with transaction creation (treats as new request)
+- **Postcondition**: Expired key is removed; new transaction is created with same idempotency key
 
 #### A7: Idempotency Key Conflict
 - **Trigger**: In step 4, an idempotency key is provided that was previously used with different request data
