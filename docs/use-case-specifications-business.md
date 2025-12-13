@@ -438,6 +438,6 @@ All use cases follow consistent error handling patterns:
 - **Transaction Amount**: Must be greater than zero
 - **Transaction Description**: Must be provided and not empty
 - **Transaction Type**: Must be either expense or revenue
-- **Idempotency Key Format**: Must be in acceptable format
-- **Idempotency Key Validity**: Keys are valid for a limited time period
-- **Response Caching**: Only successful transaction creations are cached for idempotency
+- **Idempotency Key Format**: Must be a universally unique identifier (UUID) in standard format (e.g., "550e8400-e29b-41d4-a716-446655440000")
+- **Idempotency Key Validity**: Idempotency keys and their cached responses remain valid for 24 hours from creation
+- **Response Caching**: Only successful transaction creations (status indicating success) are cached for idempotency; error responses are not cached, allowing retries
