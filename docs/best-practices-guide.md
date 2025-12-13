@@ -216,6 +216,48 @@ And the transaction should have a timestamp showing when it was created
 - What the user experiences
 - What value is delivered
 
+### 6. TODO Comments in Step Definitions
+
+#### ✅ **Correct Approach**
+- TODO comments are acceptable during initial implementation (Red phase of TDD)
+- TODO comments must be removed once the method is successfully implemented
+- Replace TODO comments with regular explanatory comments if the explanation adds value
+- Keep code clean and maintainable by removing outdated TODOs
+
+#### ❌ **Anti-Pattern**
+```java
+// WRONG: Leaving TODO comments after implementation is complete
+@Given("I provide an idempotency key {string}")
+public void i_provide_an_idempotency_key(String key) {
+    // TODO: Store the idempotency key in shared test context
+    // This key will be used by TransactionStepDefinitions when creating transactions
+    testContext.setIdempotencyKey(key);  // Implementation is done, TODO should be removed
+}
+```
+
+#### ✅ **Correct Pattern**
+```java
+// CORRECT: Remove TODO once implementation is complete
+@Given("I provide an idempotency key {string}")
+public void i_provide_an_idempotency_key(String key) {
+    // Store the idempotency key in shared test context
+    // This key will be used by TransactionStepDefinitions when creating transactions
+    testContext.setIdempotencyKey(key);
+}
+```
+
+#### ✅ **When to Remove TODOs**
+- After the method implementation is complete and tested
+- After the test passes (Green phase of TDD)
+- During code review or refactoring phase
+- Before committing code to version control
+
+#### ✅ **When to Keep Comments**
+- Keep explanatory comments that add value for future maintainers
+- Keep comments that explain non-obvious business logic
+- Keep comments that document complex test setup or data flow
+- Remove only the "TODO:" prefix, keep useful explanations
+
 ---
 
 ## Test-Driven Development (TDD)
@@ -458,6 +500,7 @@ public class MyTest {
 - [ ] Follow DRY principle (reference, don't repeat)
 - [ ] Use business language stakeholders understand
 - [ ] Focus on what the business gets, not how it's delivered
+- [ ] TODO comments removed once step definition methods are implemented
 
 ### TDD
 - [ ] Write failing test first (Red phase)
