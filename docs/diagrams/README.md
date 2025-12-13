@@ -42,7 +42,8 @@ mmdc -i logical-view.mmd -o logical-view.png
 - `development-view.mmd` - Package structure and module organization
 
 ### Use Case Scenarios
-- `use-case-creation.mmd` - Detailed transaction creation scenario
+- `use-case-creation.mmd` - Detailed transaction creation scenario (sequence diagram)
+- `use-case-creation-activity.mmd` - Transaction creation use case activity diagram showing basic flow and all alternative flows
 - `use-case-retrieval.mmd` - Detailed transaction retrieval scenario
 - `use-case-invalid-data.mmd` - Invalid data handling scenario
 - `use-case-health-check.mmd` - System health check scenario
@@ -57,6 +58,7 @@ mmdc -i logical-view.mmd -o logical-view.png
 
 - **Graph Diagrams**: For showing component relationships and system structure
 - **Sequence Diagrams**: For showing runtime behavior and interaction flows
+- **Activity Diagrams**: For showing use case flows with decision points and alternative paths
 - **C4 Diagrams**: For hierarchical software architecture visualization (Context, Container, Component levels)
 
 ## Updating Diagrams
