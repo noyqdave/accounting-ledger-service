@@ -1,73 +1,93 @@
 flowchart TD
     Start([User initiates transaction creation]) --> CheckIdempotency{Idempotency key<br/>provided?}
     
-    %% Idempotency Key Branch
-    CheckIdempotency -->|Yes| ValidateKeyFormat[Validate idempotency key format]
+    %% Basic Flow - Main Path (highlighted)
     CheckIdempotency -->|No| ValidateFormat[Validate request format]
+    ValidateFormat --> CheckFeature[Validate feature availability]
+    CheckFeature --> RecordActivity[Record transaction creation activity]
+    RecordActivity --> ValidateData[Validate transaction data]
+    ValidateData --> CreateRecord[Create transaction record]
+    CreateRecord --> SaveTransaction[Save transaction]
+    SaveTransaction --> ConfirmCreation[Confirm successful creation]
+    ConfirmCreation --> EndSuccess([End: Transaction created])
     
+    %% Idempotency Alternative Flow Branch
+    CheckIdempotency -->|Yes| ValidateKeyFormat[Validate idempotency key format]
     ValidateKeyFormat --> KeyFormatValid{Format<br/>valid?}
-    KeyFormatValid -->|No| A5_1[Return error: Invalid key format]
-    A5_1 --> End1([End: No transaction created])
     
+    %% Invalid Format Path
+    KeyFormatValid -->|No| A5_1[Return error: Invalid key format]
+    A5_1 --> EndError1([End: No transaction created])
+    
+    %% Valid Format - Check Previous Response
     KeyFormatValid -->|Yes| CheckPreviousResponse[Check for previous response]
     CheckPreviousResponse --> ResponseExists{Previous<br/>response<br/>exists?}
     
-    ResponseExists -->|Yes| CheckExpired{Response<br/>expired?}
+    %% No Previous Response - Rejoin Basic Flow
     ResponseExists -->|No| A5_2_4[New key: Continue with basic flow]
-    A5_2_4 --> ValidateFormat
+    A5_2_4 -.->|Rejoin| ValidateFormat
     
+    %% Previous Response Exists
+    ResponseExists -->|Yes| CheckExpired{Response<br/>expired?}
+    
+    %% Expired - Rejoin Basic Flow
     CheckExpired -->|Yes| A5_2_3[Remove expired record<br/>Continue with basic flow]
-    A5_2_3 --> ValidateFormat
+    A5_2_3 -.->|Rejoin| ValidateFormat
     
+    %% Not Expired - Check Match
     CheckExpired -->|No| CheckMatch{Request matches<br/>previous?}
+    
+    %% Match Found - Return Previous Response
     CheckMatch -->|Yes| A5_2_1[Return previous response]
-    A5_2_1 --> End2([End: Previous response returned])
+    A5_2_1 --> EndCached([End: Previous response returned])
     
+    %% Conflict - Different Request
     CheckMatch -->|No| A5_2_2[Return error: Conflict]
-    A5_2_2 --> End3([End: No transaction created])
+    A5_2_2 --> EndConflict([End: No transaction created])
     
-    %% Basic Flow
+    %% Alternative Flows from Basic Flow Steps
     ValidateFormat --> FormatValid{Format<br/>valid?}
     FormatValid -->|No| A6[Return error: Malformed request]
-    A6 --> End4([End: No transaction created])
+    A6 --> EndError2([End: No transaction created])
+    FormatValid -->|Yes| CheckFeature
     
-    FormatValid -->|Yes| CheckFeature[Validate feature availability]
     CheckFeature --> FeatureAvailable{Feature<br/>available?}
     FeatureAvailable -->|No| A1[Return error: Feature unavailable]
-    A1 --> End5([End: No transaction created])
-    
-    FeatureAvailable -->|Yes| RecordActivity[Record transaction creation activity]
-    RecordActivity --> ValidateData[Validate transaction data]
+    A1 --> EndError3([End: No transaction created])
+    FeatureAvailable -->|Yes| RecordActivity
     
     ValidateData --> AmountValid{Amount<br/>valid?}
     AmountValid -->|No| A2[Return error: Invalid amount]
-    A2 --> End6([End: No transaction created])
-    
+    A2 --> EndError4([End: No transaction created])
     AmountValid -->|Yes| DescriptionValid{Description<br/>valid?}
     DescriptionValid -->|No| A3[Return error: Missing description]
-    A3 --> End7([End: No transaction created])
-    
-    DescriptionValid -->|Yes| CreateRecord[Create transaction record]
-    CreateRecord --> SaveTransaction[Save transaction]
+    A3 --> EndError5([End: No transaction created])
+    DescriptionValid -->|Yes| CreateRecord
     
     SaveTransaction --> SaveSuccess{Save<br/>successful?}
     SaveSuccess -->|No| A4[Return error: System error]
-    A4 --> End8([End: No transaction created])
+    A4 --> EndError6([End: No transaction created])
+    SaveSuccess -->|Yes| ConfirmCreation
     
-    SaveSuccess -->|Yes| CacheResponse{Idempotency key<br/>provided?}
-    CacheResponse -->|Yes| StoreResponse[Store response with key]
-    CacheResponse -->|No| ConfirmCreation
-    StoreResponse --> ConfirmCreation[Confirm successful creation]
+    %% Styling - Basic Flow is prominent
+    classDef basicFlow fill:#2196F3,stroke:#0d47a1,stroke-width:4px,color:#fff,font-weight:bold
+    classDef basicFlowNode fill:#42a5f5,stroke:#0277bd,stroke-width:3px,color:#fff
+    classDef alternativeFlow fill:#ff9800,stroke:#e65100,stroke-width:2px
+    classDef decision fill:#9c27b0,stroke:#4a148c,stroke-width:2px,color:#fff
+    classDef endSuccess fill:#4caf50,stroke:#1b5e20,stroke-width:3px,color:#fff,font-weight:bold
+    classDef endError fill:#f44336,stroke:#b71c1c,stroke-width:2px,color:#fff
+    classDef rejoinPath stroke:#2196F3,stroke-width:3px,stroke-dasharray: 5 5
     
-    ConfirmCreation --> End9([End: Transaction created])
+    %% Basic Flow Nodes (main path)
+    class ValidateFormat,CheckFeature,RecordActivity,ValidateData,CreateRecord,SaveTransaction,ConfirmCreation basicFlowNode
+    class Start,EndSuccess basicFlow
+    class A5_2_4,A5_2_3 rejoinPath
     
-    %% Styling
-    classDef basicFlow fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef alternativeFlow fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef decision fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef endNode fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    %% Alternative Flow Nodes
+    class A1,A2,A3,A4,A5_1,A5_2_1,A5_2_2,A6 alternativeFlow
     
-    class ValidateFormat,CheckFeature,RecordActivity,ValidateData,CreateRecord,SaveTransaction,ConfirmCreation basicFlow
-    class A1,A2,A3,A4,A5_1,A5_2_1,A5_2_2,A5_2_3,A5_2_4,A6 alternativeFlow
-    class CheckIdempotency,KeyFormatValid,ResponseExists,CheckExpired,CheckMatch,FormatValid,FeatureAvailable,AmountValid,DescriptionValid,SaveSuccess,CacheResponse decision
-    class End1,End2,End3,End4,End5,End6,End7,End8,End9 endNode
+    %% Decision Nodes
+    class CheckIdempotency,KeyFormatValid,ResponseExists,CheckExpired,CheckMatch,FormatValid,FeatureAvailable,AmountValid,DescriptionValid,SaveSuccess decision
+    
+    %% End Nodes
+    class EndCached,EndConflict,EndError1,EndError2,EndError3,EndError4,EndError5,EndError6 endError
