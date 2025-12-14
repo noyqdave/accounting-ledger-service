@@ -459,6 +459,201 @@ public class MyTest {
 
 ---
 
+## Docker and Testcontainers Integration
+
+### 1. Why Use Testcontainers
+
+#### ✅ **Correct Approach**
+- Use Testcontainers for integration tests that require real databases
+- Provides production-like testing environment
+- Ensures compatibility with actual database (PostgreSQL, MySQL, etc.)
+- Automatically manages container lifecycle (start/stop)
+
+#### ❌ **Anti-Pattern**
+```java
+// WRONG: Using in-memory H2 for all tests when production uses PostgreSQL
+@SpringBootTest
+public class MyTest {
+    // H2 behaves differently than PostgreSQL - tests may pass but production fails
+}
+```
+
+#### ✅ **Correct Pattern**
+```java
+// CORRECT: Use Testcontainers for integration tests
+@SpringBootTest
+@ActiveProfiles("test")
+public class PostgreSQLIntegrationTest {
+    @ClassRule
+    public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
+    // Tests run against real PostgreSQL
+}
+```
+
+### 2. Docker Configuration
+
+#### ✅ **macOS with Docker Desktop**
+
+**Option 1: Environment Variable (Recommended)**
+```bash
+# Add to ~/.zshrc or ~/.bash_profile
+export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock
+```
+
+**Option 2: Maven Surefire Configuration**
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+        <environmentVariables>
+            <DOCKER_HOST>unix://${user.home}/.docker/run/docker.sock</DOCKER_HOST>
+        </environmentVariables>
+    </configuration>
+</plugin>
+```
+
+**Option 3: Testcontainers Properties File**
+Create `~/.testcontainers.properties`:
+```
+docker.host=unix:///Users/your-username/.docker/run/docker.sock
+```
+
+#### ✅ **Linux**
+- Usually works out of the box: `/var/run/docker.sock`
+- If not, set: `export DOCKER_HOST=unix:///var/run/docker.sock`
+
+#### ✅ **Windows**
+- Docker Desktop usually works automatically
+- If issues: Use named pipe: `npipe:////./pipe/docker_engine`
+
+### 3. Testcontainers Best Practices
+
+#### ✅ **Container Lifecycle Management**
+```java
+// CORRECT: Use @ClassRule for JUnit 4 (container shared across all tests in class)
+@ClassRule
+public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+        .withDatabaseName("testdb")
+        .withUsername("test")
+        .withPassword("test");
+
+// CORRECT: Use @Container for JUnit 5 (per-test or shared)
+@Container
+static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
+```
+
+#### ✅ **Spring Boot Integration**
+```java
+// CORRECT: Use @DynamicPropertySource for JUnit 5
+@DynamicPropertySource
+static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+}
+
+// CORRECT: Use system properties for JUnit 4
+static {
+    postgres.start();
+    System.setProperty("spring.datasource.url", postgres.getJdbcUrl());
+    System.setProperty("spring.datasource.username", postgres.getUsername());
+    System.setProperty("spring.datasource.password", postgres.getPassword());
+}
+```
+
+#### ✅ **Container Reuse (Performance)**
+```java
+// CORRECT: Enable reuse for faster test execution (containers persist between runs)
+@ClassRule
+public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+        .withReuse(true);  // Container stays running between test runs
+```
+
+**Note:** Requires `testcontainers.reuse.enable=true` in `~/.testcontainers.properties`
+
+#### ❌ **Anti-Patterns**
+```java
+// WRONG: Starting container in @Before (creates new container per test - slow!)
+@Before
+public void setUp() {
+    postgres.start();  // Don't do this with @ClassRule
+}
+
+// WRONG: Not cleaning up test data
+@Test
+public void testSomething() {
+    // Creates data but doesn't clean up - affects other tests
+}
+
+// WRONG: Hardcoding container configuration
+@ClassRule
+public static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+        .withDatabaseName("mydb")  // Hardcoded - not flexible
+```
+
+### 4. Test Organization
+
+#### ✅ **Correct Approach**
+- **Unit Tests**: Use H2 or mocks (fast, no Docker needed)
+- **Integration Tests**: Use Testcontainers (real database, slower)
+- **BDD Tests**: Can use either, depending on what you're testing
+
+#### ✅ **Test Naming Convention**
+```java
+// Unit test (no Docker)
+@Test
+public void shouldSaveTransaction() { ... }
+
+// Integration test (with Docker)
+@Test
+public void shouldSaveAndRetrieveTransactionFromPostgreSQL() { ... }
+```
+
+### 5. Troubleshooting
+
+#### ✅ **Common Issues and Solutions**
+
+**"Could not find a valid Docker environment"**
+1. Verify Docker Desktop is running: `docker ps`
+2. Check Docker socket path: `ls -la ~/.docker/run/docker.sock`
+3. Set `DOCKER_HOST` environment variable
+4. Verify Docker context: `docker context ls`
+
+**"Container startup timeout"**
+- Increase timeout: `.withStartupTimeout(Duration.ofMinutes(2))`
+- Check Docker has enough resources (CPU/memory)
+
+**"Port already in use"**
+- Use random ports: Testcontainers does this automatically
+- Or specify: `.withExposedPorts(5432)`
+
+**"Image pull failures"**
+- Pre-pull images: `docker pull postgres:15-alpine`
+- Check network connectivity
+- Verify Docker registry access
+
+### 6. CI/CD Integration
+
+#### ✅ **GitHub Actions**
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: mvn test
+        # Docker is available by default in GitHub Actions
+```
+
+#### ✅ **Local Development**
+- Use helper script: `./run-integration-tests.sh`
+- Or set environment variable in shell profile
+- Document in README for team members
+
+---
+
 ## Common Anti-Patterns to Avoid
 
 ### Use Case Specifications
@@ -512,6 +707,15 @@ public class MyTest {
 - [ ] Use JUnit 4 (not JUnit 5) for Cucumber compatibility
 - [ ] Test classes use `@RunWith(SpringRunner.class)` for Spring Boot tests
 - [ ] Test methods are `public void` (JUnit 4 syntax)
+
+### Docker/Testcontainers
+- [ ] Docker Desktop installed and running
+- [ ] DOCKER_HOST environment variable configured (macOS)
+- [ ] Integration tests use Testcontainers for real database testing
+- [ ] Unit tests use H2 or mocks (no Docker required)
+- [ ] Container lifecycle properly managed (@ClassRule for JUnit 4)
+- [ ] Test data cleaned up between tests
+- [ ] Helper scripts or documentation for running integration tests
 
 ---
 
