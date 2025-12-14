@@ -654,6 +654,57 @@ jobs:
 
 ---
 
+## Version Control Best Practices
+
+### Reverting Failed Experiments
+
+#### ✅ **Correct Approach**
+When an experiment or feature attempt doesn't work out, use version control to revert to the last known good state instead of manually undoing changes.
+
+```bash
+# Find the last good commit
+git log --oneline
+
+# Reset to that commit (discards all changes)
+git reset --hard <commit-hash>
+
+# Clean up any untracked files
+git clean -fd
+
+# Verify tests still pass
+mvn clean test
+```
+
+#### ❌ **Anti-Pattern**
+```bash
+# WRONG: Manually deleting files and reverting changes one by one
+rm -rf src/test/java/.../PostgreSQLIntegrationTest.java
+rm docs/postgresql-integration-testing.md
+# Edit pom.xml to remove dependencies
+# Edit application-test.yml to revert config
+# ... many more manual steps
+```
+
+#### ✅ **Why This Matters**
+- **Faster**: One command vs many manual steps
+- **Safer**: Git knows exactly what changed, you might miss something
+- **Complete**: Removes all related changes (config, docs, dependencies)
+- **Verifiable**: Easy to confirm you're back to a known good state
+
+#### ✅ **When to Use**
+- Experimenting with new libraries or frameworks
+- Trying architectural approaches that don't pan out
+- Feature attempts that prove too complex or incompatible
+- Any situation where you want to "start over" from a clean state
+
+#### ✅ **Best Practice**
+- Commit frequently at good checkpoints
+- Use descriptive commit messages to identify good states
+- Before major experiments, create a branch (can delete if it fails)
+- After reset, verify tests pass before continuing
+
+---
+
 ## Common Anti-Patterns to Avoid
 
 ### Use Case Specifications
