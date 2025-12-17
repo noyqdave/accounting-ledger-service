@@ -78,7 +78,6 @@ graph TB
   - `IdempotencyFilter`: HTTP filter for idempotency key processing (inbound adapter)
   - `TransactionRepositoryAdapter`: JPA repository implementation (outbound adapter)
   - `DatabaseIdempotencyAdapter`: Database-backed idempotency storage (outbound adapter)
-  - `InMemoryIdempotencyAdapter`: In-memory idempotency storage (outbound adapter)
   - `IdempotencyCleanupScheduler`: Scheduled task for cleaning expired keys (outbound adapter)
   - `TransactionEntity`: Database entity mapping
   - `IdempotencyEntity`: Idempotency key database entity

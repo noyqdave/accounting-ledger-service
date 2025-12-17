@@ -27,7 +27,6 @@
 - **Adapters**: Port implementations for external systems
   - **TransactionRepositoryAdapter**: Database persistence adapter (outbound)
   - **DatabaseIdempotencyAdapter**: Database-backed idempotency storage (outbound)
-  - **InMemoryIdempotencyAdapter**: In-memory idempotency key storage adapter (outbound)
   - **IdempotencyCleanupScheduler**: Scheduled task for cleaning expired keys (outbound)
 - **Entities**: Database persistence objects
   - **TransactionEntity**: JPA entity for transactions

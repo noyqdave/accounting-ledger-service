@@ -17,7 +17,7 @@ graph TB
         TC[TransactionController]
         IF[IdempotencyFilter]
         TRA[TransactionRepositoryAdapter]
-        IMA[InMemoryIdempotencyAdapter]
+        DIA[DatabaseIdempotencyAdapter]
         TE[TransactionEntity]
         TJR[TransactionJpaRepository]
     end
@@ -38,7 +38,7 @@ graph TB
     TRA --> TRP
     TRA --> TJR
     TRA --> TE
-    IMA --> IRP
+    DIA --> IRP
     
     %% Cross-cutting concerns
     FFF -.-> TC

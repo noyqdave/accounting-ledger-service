@@ -23,6 +23,12 @@ The feature flag system consists of four main components:
    - Extends `OncePerRequestFilter` to intercept HTTP requests
    - Checks feature flags before requests reach controllers
    - Returns HTTP 403 Forbidden when a feature is disabled
+   - Uses `FeatureFlagProperties` (via `@ConfigurationProperties`) for endpoint mapping
+
+4. **FeatureFlagProperties** (Configuration Properties)
+   - Uses `@ConfigurationProperties(prefix = "feature")` to bind YAML configuration
+   - Provides endpoint-to-feature-flag mapping from `application.yml`
+   - Replaces previous SpEL-based approach for cleaner configuration binding
 
 4. **FeatureFlagDisabledException** (Exception)
    - Custom runtime exception thrown when a disabled feature is accessed
@@ -46,8 +52,9 @@ feature:
 **Configuration Structure:**
 - `feature.<feature-name>.enabled`: Boolean flag controlling feature availability
 - `feature.endpoints`: Map of HTTP method + path to feature name
-  - Format: `"METHOD /path": "feature-name"`
+  - Format: `"[METHOD /path]": "feature-name"` (bracket notation preserves spaces in keys)
   - Used by `FeatureFlagFilter` to determine which feature to check for each endpoint
+  - Bound to `FeatureFlagProperties` via `@ConfigurationProperties`
 
 ### How It Works
 
@@ -80,6 +87,14 @@ Once injected, these boolean fields are **final for the bean's lifetime** - they
 `FeatureFlagFilter` intercepts all HTTP requests:
 
 ```java
+public FeatureFlagFilter(FeatureFlagService featureFlagService, 
+                         ObjectMapper objectMapper,
+                         FeatureFlagProperties featureFlagProperties) {
+    this.featureFlagService = featureFlagService;
+    this.objectMapper = objectMapper;
+    this.endpointFeatureMap = featureFlagProperties.getEndpoints();
+}
+
 @Override
 protected void doFilterInternal(HttpServletRequest request, 
                                HttpServletResponse response, 
@@ -88,7 +103,7 @@ protected void doFilterInternal(HttpServletRequest request,
     String path = request.getRequestURI();
     String endpointKey = method + " " + path;  // e.g., "GET /transactions"
     
-    // Look up feature name from endpoint mapping
+    // Look up feature name from endpoint mapping (loaded via @ConfigurationProperties)
     String featureName = endpointFeatureMap.get(endpointKey);
     
     if (featureName != null) {
@@ -104,6 +119,8 @@ protected void doFilterInternal(HttpServletRequest request,
     filterChain.doFilter(request, response);
 }
 ```
+
+**Key Point:** The endpoint mapping is loaded via `FeatureFlagProperties` using `@ConfigurationProperties`, which provides cleaner configuration binding than the previous SpEL-based approach.
 
 **Flow:**
 1. Request arrives (e.g., `GET /transactions`)
@@ -423,33 +440,47 @@ mvn test
 ```
 **Trade-off:** Not suitable for automated test suites, requires external setup
 
-### Solution 5: Refactor to Use ConfigurationProperties
-Instead of `@Value`, use `@ConfigurationProperties` which can be more easily overridden:
+### Solution 5: Refactor to Use ConfigurationProperties ✅ **IMPLEMENTED**
+
+**Solution:** Refactored to use `@ConfigurationProperties` for endpoint mapping:
 ```java
+@Component
 @ConfigurationProperties(prefix = "feature")
 public class FeatureFlagProperties {
-    private Map<String, Boolean> flags = new HashMap<>();
+    private Map<String, String> endpoints = new HashMap<>();
     // ...
 }
 ```
-**Trade-off:** Requires code changes to the production implementation
+
+**Implementation:**
+- Created `FeatureFlagProperties` class with `@ConfigurationProperties(prefix = "feature")`
+- Updated `FeatureFlagFilter` to inject `FeatureFlagProperties` instead of using SpEL
+- Used bracket notation `"[GET /transactions]"` in YAML to preserve keys with spaces
+- Created separate Cucumber test runners for enabled/disabled scenarios
+- Used profile-specific YAML files (`application-ff-disabled.yml`) to override feature flags
+
+**Result:** ✅ **Successfully implemented** - Disabled feature flag tests now work correctly
 
 ## Current State
 
-As of this writing, **testing disabled feature flags in integration tests has not been successfully implemented**. The feature flag system works correctly in production (flags can be disabled via `application.yml`), but testing the disabled state in automated tests presents challenges due to:
+**✅ Feature flag testing is now fully implemented and working.**
 
-1. Bean creation timing
-2. Property resolution order
-3. Context sharing in Cucumber
-4. Filter dependency injection timing
+The feature flag system works correctly in both production and testing:
+- **Production:** Feature flags can be disabled via `application.yml`
+- **Testing:** Disabled feature flags are tested using:
+  - Separate Cucumber test runners (`CucumberTestRunnerEnabled`, `CucumberTestRunnerFeatureDisabled`)
+  - Profile-specific YAML files (`application-ff-disabled.yml`)
+  - `@ConfigurationProperties` for clean configuration binding
+  - Separate Spring contexts for enabled/disabled scenarios
 
-The feature flag functionality is tested indirectly through:
-- Unit tests of `FeatureFlagService` logic
-- Integration tests with enabled flags (verifying the filter allows requests)
-- Manual testing with disabled flags in `application.yml`
+**Testing Infrastructure:**
+- `CucumberTestRunnerEnabled`: Runs scenarios with feature flags enabled (excludes `@ff_disabled` tag)
+- `CucumberTestRunnerFeatureDisabled`: Runs scenarios with feature flags disabled (only `@ff_disabled` tag)
+- `application-ff-disabled.yml`: Profile configuration that disables specific feature flags
+- Separate `@CucumberContextConfiguration` classes in isolated packages to prevent context conflicts
 
-## Recommendations
-
-1. **For Production:** Feature flags work as designed - modify `application.yml` to disable features
-2. **For Testing:** Consider testing the filter logic in isolation with unit tests rather than full integration tests
-3. **For Future:** Consider refactoring to use `@ConfigurationProperties` or a more testable design pattern if disabled flag testing becomes critical
+**Test Coverage:**
+- ✅ Unit tests of `FeatureFlagService` logic
+- ✅ Integration tests with enabled flags (verifying the filter allows requests)
+- ✅ BDD tests with disabled flags (verifying the filter returns 403 Forbidden)
+- ✅ Endpoint mapping correctly loaded via `@ConfigurationProperties`

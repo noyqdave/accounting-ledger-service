@@ -28,7 +28,6 @@ The logical view shows the system's decomposition into key abstractions and thei
 - **IdempotencyFilter**: HTTP filter for idempotency key processing (Inbound Adapter)
 - **TransactionRepositoryAdapter**: JPA repository adapter (Outbound Adapter)
 - **DatabaseIdempotencyAdapter**: Database-backed idempotency key storage adapter (Outbound Adapter)
-- **InMemoryIdempotencyAdapter**: In-memory idempotency key storage adapter (Outbound Adapter)
 - **IdempotencyCleanupScheduler**: Scheduled task for cleaning expired idempotency keys (Outbound Adapter)
 - **TransactionEntity**: JPA entity for database persistence
 - **IdempotencyEntity**: JPA entity for idempotency key storage
@@ -125,8 +124,6 @@ com.example.ledger/
 │       │   └── entity/
 │       │       ├── TransactionEntity.java
 │       │       └── IdempotencyEntity.java
-│       ├── idempotency/                  # Idempotency adapters
-│       │   └── InMemoryIdempotencyAdapter.java
 │       └── scheduling/                   # Scheduling adapters
 │           └── IdempotencyCleanupScheduler.java
 ├── application/
