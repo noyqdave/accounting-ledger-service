@@ -1,4 +1,4 @@
-package com.example.ledger.bdd;
+package com.example.ledger.bdd.steps;
 
 import io.restassured.response.Response;
 import org.springframework.stereotype.Component;
@@ -57,4 +57,3 @@ public class TestContext {
         storedTransactionId = null;
     }
 }
-

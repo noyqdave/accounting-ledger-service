@@ -1,4 +1,4 @@
-package com.example.ledger.bdd;
+package com.example.ledger.bdd.steps;
 
 import com.example.ledger.adapters.out.persistence.TransactionJpaRepository;
 import io.cucumber.datatable.DataTable;
@@ -11,7 +11,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.TestPropertySource;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,10 +21,6 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@TestPropertySource(properties = {
-    "feature.create-transaction.enabled=true",
-    "feature.get-all-transactions.enabled=true"
-})
 public class TransactionStepDefinitions {
 
     @LocalServerPort

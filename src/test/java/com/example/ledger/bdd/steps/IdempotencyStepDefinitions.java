@@ -1,4 +1,4 @@
-package com.example.ledger.bdd;
+package com.example.ledger.bdd.steps;
 
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -7,7 +7,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
 import java.util.Map;
@@ -16,10 +15,6 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@TestPropertySource(properties = {
-    "feature.create-transaction.enabled=true",
-    "feature.get-all-transactions.enabled=true"
-})
 public class IdempotencyStepDefinitions {
 
     @LocalServerPort

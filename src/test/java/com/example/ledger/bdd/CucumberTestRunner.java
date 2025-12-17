@@ -7,7 +7,10 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
     features = "src/test/resources/features",
-    glue = "com.example.ledger.bdd",
+    glue = {
+        "com.example.ledger.bdd.enabled",  // Contains CucumberSpringConfigurationEnabled (uses enabled flags)
+        "com.example.ledger.bdd.steps"     // Contains step definitions
+    },
     plugin = {"pretty", "html:target/cucumber-reports/cucumber.html", "json:target/cucumber-reports/cucumber.json"},
     monochrome = true
 )
