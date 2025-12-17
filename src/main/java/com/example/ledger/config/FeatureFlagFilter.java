@@ -5,7 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
@@ -30,10 +29,12 @@ public class FeatureFlagFilter extends OncePerRequestFilter {
 
     public FeatureFlagFilter(FeatureFlagService featureFlagService, 
                            ObjectMapper objectMapper,
-                           @Value("#{${feature.endpoints:{}}}") Map<String, String> endpointFeatureMap) {
+                           FeatureFlagProperties featureFlagProperties) {
         this.featureFlagService = featureFlagService;
         this.objectMapper = objectMapper;
-        this.endpointFeatureMap = endpointFeatureMap != null ? endpointFeatureMap : Map.of();
+        this.endpointFeatureMap = featureFlagProperties.getEndpoints() != null 
+            ? featureFlagProperties.getEndpoints() 
+            : Map.of();
     }
 
     @Override

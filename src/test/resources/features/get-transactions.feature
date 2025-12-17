@@ -61,3 +61,10 @@ Feature: Retrieve All Transactions
     Then I should receive 3 transactions
     And all transactions should have valid data
     And the response status should be 200
+
+  @ff_disabled
+  Scenario: Retrieve All Transactions When Feature is Disabled
+    Given the ledger has no transactions
+    When I retrieve all transactions
+    Then the response status should be 403
+    And I should receive an error message that the feature is disabled

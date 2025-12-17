@@ -243,6 +243,12 @@ public class TransactionStepDefinitions {
 
     @When("I retrieve all transactions")
     public void i_retrieve_all_transactions() {
+        // Ensure baseUrl is set (in case this is called without a Given step that sets it)
+        if (baseUrl == null) {
+            baseUrl = "http://localhost:" + port;
+            RestAssured.baseURI = baseUrl;
+        }
+        
         response = given()
                 .when()
                 .get("/transactions");
@@ -384,5 +390,12 @@ public class TransactionStepDefinitions {
             assertTrue(type.equals("EXPENSE") || type.equals("REVENUE"),
                     "Transaction type should be EXPENSE or REVENUE");
         }
+    }
+
+    @Then("I should receive an error message that the feature is disabled")
+    public void i_should_receive_an_error_message_that_the_feature_is_disabled() {
+        response.then()
+                .body("error", notNullValue())
+                .body("error", containsStringIgnoringCase("disabled"));
     }
 }

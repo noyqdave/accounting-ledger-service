@@ -3,6 +3,9 @@ feature:
     enabled: true
   get-all-transactions:
     enabled: true
+  endpoints:
+    "[POST /transactions]": "create-transaction"
+    "[GET /transactions]": "get-all-transactions"
 
 spring:
   datasource:

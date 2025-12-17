@@ -1,0 +1,8 @@
+# Profile configuration for testing with feature flags disabled
+# This profile is activated alongside "test" profile to override feature flag settings
+# Spring Boot automatically loads this file when "ff-disabled" profile is active
+# Only override what differs from application-test.yml - endpoints are inherited
+
+feature:
+  get-all-transactions:
+    enabled: false  # Feature flag disabled for this profile

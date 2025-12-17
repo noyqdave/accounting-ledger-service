@@ -4,8 +4,8 @@ feature:
   get-all-transactions:
     enabled: true
   endpoints:
-    "POST /transactions": "create-transaction"
-    "GET /transactions": "get-all-transactions"
+    "[POST /transactions]": "create-transaction"
+    "[GET /transactions]": "get-all-transactions"
 
 management:
   endpoints:

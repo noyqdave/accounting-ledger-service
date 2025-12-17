@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
         "com.example.ledger.bdd.steps"     // Contains step definitions
     },
     plugin = {"pretty", "html:target/cucumber-reports/cucumber.html", "json:target/cucumber-reports/cucumber.json"},
+    tags = "not @ff_disabled",  // Exclude disabled scenarios (they run in disabled runner)
     monochrome = true
 )
 public class CucumberTestRunner {
