@@ -4,13 +4,15 @@ import com.example.ledger.application.usecase.CreateTransactionUseCase;
 import com.example.ledger.application.usecase.GetAllTransactionsUseCase;
 import com.example.ledger.domain.model.Transaction;
 import com.example.ledger.domain.model.TransactionType;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -24,13 +26,14 @@ import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
+@RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
         "feature.create-transaction.enabled=true",
         "feature.get-all-transactions.enabled=true"
 })
-class TransactionControllerTest {
+public class TransactionControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,7 +44,7 @@ class TransactionControllerTest {
     private CreateTransactionUseCase createTransactionUseCase;
 
     @Test
-    void shouldReturnListOfTransactions() throws Exception {
+    public void shouldReturnListOfTransactions() throws Exception {
         Transaction t1 = new Transaction(
                 UUID.randomUUID(),
                 LocalDateTime.now(),
@@ -67,7 +70,7 @@ class TransactionControllerTest {
     }
 
     @Test
-    void shouldCreateTransaction() throws Exception {
+    public void shouldCreateTransaction() throws Exception {
         // Arrange
         Transaction savedTransaction = new Transaction(
                 UUID.randomUUID(),

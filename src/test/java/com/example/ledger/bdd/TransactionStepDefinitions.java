@@ -1,6 +1,7 @@
 package com.example.ledger.bdd;
 
 import com.example.ledger.adapters.out.persistence.TransactionJpaRepository;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -209,5 +210,184 @@ public class TransactionStepDefinitions {
     @Given("the transaction description is null")
     public void the_transaction_description_is_null() {
         // Don't add description to transactionData, it will be null
+    }
+
+    // GET Transactions Step Definitions
+
+    @Given("the ledger has no transactions")
+    public void the_ledger_has_no_transactions() {
+        // Database is already cleaned in @Before, but this makes the intent explicit
+        baseUrl = "http://localhost:" + port;
+        RestAssured.baseURI = baseUrl;
+    }
+
+    @Given("I have created the following transactions:")
+    public void i_have_created_the_following_transactions(DataTable dataTable) {
+        baseUrl = "http://localhost:" + port;
+        RestAssured.baseURI = baseUrl;
+
+        // Convert DataTable to List of Maps
+        List<Map<String, String>> transactions = dataTable.asMaps(String.class, String.class);
+
+        // Create each transaction via API
+        for (Map<String, String> transactionRow : transactions) {
+            Map<String, Object> transactionData = new HashMap<>();
+            transactionData.put("amount", Double.parseDouble(transactionRow.get("amount")));
+            transactionData.put("description", transactionRow.get("description"));
+            transactionData.put("type", transactionRow.get("type"));
+
+            given()
+                    .contentType(ContentType.JSON)
+                    .body(transactionData)
+                    .when()
+                    .post("/transactions")
+                    .then()
+                    .statusCode(200);
+        }
+    }
+
+    @When("I retrieve all transactions")
+    public void i_retrieve_all_transactions() {
+        response = given()
+                .when()
+                .get("/transactions");
+        
+        // Store response in shared context
+        testContext.setResponse(response);
+    }
+
+    @Then("I should receive an empty list")
+    public void i_should_receive_an_empty_list() {
+        response.then()
+                .statusCode(200)
+                .body("", empty());
+    }
+
+    @Then("I should receive {int} transactions")
+    public void i_should_receive_transactions(int expectedCount) {
+        response.then()
+                .statusCode(200)
+                .body("size()", equalTo(expectedCount));
+    }
+
+    @Then("the response should contain a transaction with amount {double} and description {string}")
+    public void the_response_should_contain_a_transaction_with_amount_and_description(
+            Double expectedAmount, String expectedDescription) {
+        List<Map<String, Object>> transactions = response.then()
+                .extract()
+                .jsonPath()
+                .getList("");
+
+        boolean found = transactions.stream()
+                .anyMatch(tx -> {
+                    Number amount = (Number) tx.get("amount");
+                    String description = (String) tx.get("description");
+                    return amount != null && 
+                           Math.abs(amount.doubleValue() - expectedAmount) < 0.01 &&
+                           expectedDescription.equals(description);
+                });
+
+        assertTrue(found, 
+                String.format("Transaction with amount %.2f and description '%s' should be in the response",
+                        expectedAmount, expectedDescription));
+    }
+
+    @Then("each transaction should have an id")
+    public void each_transaction_should_have_an_id() {
+        List<Map<String, Object>> transactions = response.then()
+                .extract()
+                .jsonPath()
+                .getList("");
+
+        for (Map<String, Object> transaction : transactions) {
+            assertNotNull(transaction.get("id"), "Each transaction should have an id");
+            assertDoesNotThrow(() -> UUID.fromString(transaction.get("id").toString()),
+                    "Transaction ID should be a valid UUID");
+        }
+    }
+
+    @Then("each transaction should have an amount")
+    public void each_transaction_should_have_an_amount() {
+        List<Map<String, Object>> transactions = response.then()
+                .extract()
+                .jsonPath()
+                .getList("");
+
+        for (Map<String, Object> transaction : transactions) {
+            assertNotNull(transaction.get("amount"), "Each transaction should have an amount");
+        }
+    }
+
+    @Then("each transaction should have a description")
+    public void each_transaction_should_have_a_description() {
+        List<Map<String, Object>> transactions = response.then()
+                .extract()
+                .jsonPath()
+                .getList("");
+
+        for (Map<String, Object> transaction : transactions) {
+            assertNotNull(transaction.get("description"), "Each transaction should have a description");
+        }
+    }
+
+    @Then("each transaction should have a type")
+    public void each_transaction_should_have_a_type() {
+        List<Map<String, Object>> transactions = response.then()
+                .extract()
+                .jsonPath()
+                .getList("");
+
+        for (Map<String, Object> transaction : transactions) {
+            assertNotNull(transaction.get("type"), "Each transaction should have a type");
+            String type = transaction.get("type").toString();
+            assertTrue(type.equals("EXPENSE") || type.equals("REVENUE"),
+                    "Transaction type should be either EXPENSE or REVENUE");
+        }
+    }
+
+    @Then("each transaction should have a date")
+    public void each_transaction_should_have_a_date() {
+        List<Map<String, Object>> transactions = response.then()
+                .extract()
+                .jsonPath()
+                .getList("");
+
+        for (Map<String, Object> transaction : transactions) {
+            assertNotNull(transaction.get("date"), "Each transaction should have a date");
+        }
+    }
+
+    @Then("the response status should be {int}")
+    public void the_response_status_should_be(int expectedStatus) {
+        response.then()
+                .statusCode(expectedStatus);
+    }
+
+    @Then("all transactions should have valid data")
+    public void all_transactions_should_have_valid_data() {
+        List<Map<String, Object>> transactions = response.then()
+                .extract()
+                .jsonPath()
+                .getList("");
+
+        for (Map<String, Object> transaction : transactions) {
+            // Verify all required fields are present and valid
+            assertNotNull(transaction.get("id"), "Transaction should have an id");
+            assertDoesNotThrow(() -> UUID.fromString(transaction.get("id").toString()),
+                    "Transaction ID should be a valid UUID");
+            assertNotNull(transaction.get("amount"), "Transaction should have an amount");
+            assertNotNull(transaction.get("description"), "Transaction should have a description");
+            assertNotNull(transaction.get("type"), "Transaction should have a type");
+            assertNotNull(transaction.get("date"), "Transaction should have a date");
+
+            // Verify amount is positive
+            Number amount = (Number) transaction.get("amount");
+            assertTrue(amount.doubleValue() > 0, "Transaction amount should be positive");
+
+            // Verify type is valid
+            String type = transaction.get("type").toString();
+            assertTrue(type.equals("EXPENSE") || type.equals("REVENUE"),
+                    "Transaction type should be EXPENSE or REVENUE");
+        }
     }
 }
