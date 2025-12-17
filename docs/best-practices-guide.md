@@ -703,6 +703,61 @@ rm docs/postgresql-integration-testing.md
 - Before major experiments, create a branch (can delete if it fails)
 - After reset, verify tests pass before continuing
 
+### Cleaning Up Debug Code
+
+#### ✅ **Correct Approach**
+- Remove all debug code before committing and pushing
+- Debug code includes: `System.out.println()`, debug hooks, temporary logging, diagnostic classes
+- Debug code is only needed during development/troubleshooting
+- Once the problem is solved, debug code should be removed
+
+#### ❌ **Anti-Pattern**
+```java
+// WRONG: Leaving debug code in the codebase
+public class PropertySourceDebugHook {
+    @Before(order = 0)
+    public void dumpFeatureFlagResolution() {
+        System.out.println("=== DEBUG feature flag resolution ===");
+        System.out.println("Active profiles: " + String.join(",", env.getActiveProfiles()));
+        // ... many more debug statements
+    }
+}
+// This was useful for debugging, but should be removed once the issue is resolved
+```
+
+#### ✅ **Correct Pattern**
+```java
+// CORRECT: Debug code removed after issue is resolved
+// No debug hooks or diagnostic classes remain in the codebase
+// All tests still pass without debug code
+```
+
+#### ✅ **When to Remove Debug Code**
+- After the problem is identified and fixed
+- After tests pass and the solution is verified
+- Before committing to version control
+- During code review (reviewers should flag debug code)
+
+#### ✅ **What Counts as Debug Code**
+- Temporary `System.out.println()` statements
+- Debug hooks (like `PropertySourceDebugHook`)
+- Diagnostic classes created only for troubleshooting
+- Temporary logging added to understand behavior
+- Test code that prints internal state for debugging
+
+#### ✅ **What to Keep**
+- Production logging (using proper logging framework like SLF4J)
+- Test assertions and validations
+- Error handling code
+- Comments that explain non-obvious logic
+
+#### ✅ **Best Practice**
+- Use proper logging frameworks for production code (SLF4J, Log4j, etc.)
+- Use debuggers or IDE breakpoints during development instead of print statements
+- If you must add debug code, add a TODO comment to remind yourself to remove it
+- Run all tests after removing debug code to ensure nothing breaks
+- Commit debug code removal in a separate commit with a clear message
+
 ---
 
 ## Common Anti-Patterns to Avoid
