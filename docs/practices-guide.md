@@ -697,4 +697,4 @@ public class PropertySourceDebugHook {
 ## References
 - Use case specifications: [Use Case Specifications](use-case-specifications.md)
 - BDD scenarios: [BDD Scenarios](bdd-scenarios.md)
-- Architecture documentation: [Architecture Overview](ARCHITECTURE.md)
+- Architecture documentation: [Architecture Overview](../ARCHITECTURE.md)
