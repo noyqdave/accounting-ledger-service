@@ -474,14 +474,14 @@ public void shouldReturnEmptyOptionalWhenIdempotencyKeyNotFound() {
 ### 7. TDD and Integration Tests
 
 #### ✅ **Correct Approach**
-- Use TDD for unit tests (fast feedback)
+- **BDD scenarios (Cucumber) are written first** - they drive development and will fail initially
+- Use TDD for unit tests (fast feedback) - written after BDD scenarios define behavior
 - Integration tests can be written after unit tests pass
-- BDD scenarios (Cucumber) can be written after core functionality works
 
 #### ✅ **Layered Testing Strategy**
-1. **Unit Tests (TDD)**: Fast, focused, test one class/component
-2. **Integration Tests**: Test component interactions
-3. **BDD Scenarios**: Test end-to-end behavior from user perspective
+1. **BDD Scenarios**: Written first, test end-to-end behavior from user perspective, drive development
+2. **Unit Tests (TDD)**: Fast, focused, test one class/component, written to support BDD scenarios
+3. **Integration Tests**: Test component interactions, written after unit tests pass
 
 ### 8. Testing Framework: JUnit 4
 
