@@ -17,7 +17,7 @@ The practices below reflect both forward-looking guidance (for BDD scenarios tha
 
 ## Use Case Specifications
 
-**Note on Project Context**: In this project, use case specifications were reverse engineered from existing code and observed behavior after implementation. They normalize terminology, document flows consistently, and capture exception handling patterns. The practices below reflect the discipline required to derive clear, accurate documentation from working code.
+**Note on Project Context**: The practices below reflect the discipline required to derive clear, accurate documentation from working code.
 
 ### 1. Preconditions vs Runtime Validation
 
@@ -108,7 +108,7 @@ The practices below reflect both forward-looking guidance (for BDD scenarios tha
 
 ## BDD (Behavior-Driven Development)
 
-**Note on Project Context**: In this project, BDD scenarios were written as executable acceptance tests that drove incremental development. They constrained AI-generated code during implementation. The problem space approach and business language guidelines prevented AI from generating overly technical implementations. The practices below reflect how BDD scenarios guided development in this project.
+**Note on Project Context**: The problem space approach and business language guidelines prevented AI from generating overly technical implementations.
 
 ### 1. Problem Space vs Solution Space
 
@@ -273,7 +273,7 @@ public void i_provide_an_idempotency_key(String key) {
 
 ## Test-Driven Development (TDD)
 
-**Note on Project Context**: In this project, test-accompanied development was used rather than strict TDD. Tests and implementation were written together as a tight pair, with test intent defined before implementation was complete. This pattern works well with AI-assisted development, where AI can generate code that often satisfies the test intent on the first try. The core principle remains: define expected behavior in the test before writing the implementation that satisfies it.
+**Note on Project Context**: In this project, test-accompanied development was used rather than strict TDD. Tests and implementation were written together as a tight pair, with test intent defined before implementation was complete. This pattern works well with AI-assisted development, where AI can generate code that often satisfies the test intent on the first try.
 
 ### 1. Classic TDD: The Red-Green-Refactor Cycle
 
