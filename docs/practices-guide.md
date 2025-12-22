@@ -1,7 +1,7 @@
-# Best Practices Guide: Use Case Specifications & BDD
+# Practices Guide: Use Case Specifications & BDD
 
 ## Overview
-This guide captures best practices for writing use case specifications and BDD scenarios, derived from real project experience and industry standards.
+This guide captures practices for writing use case specifications and BDD scenarios, derived from real project experience and industry standards.
 
 ### How These Practices Were Applied in This Project
 In this project, the development workflow followed a specific sequence:
@@ -392,7 +392,7 @@ public void shouldReturnEmptyOptionalWhenIdempotencyKeyNotFound() {
 }
 ```
 
-### 5. TDD Workflow Best Practices
+### 5. TDD Workflow Practices
 
 #### ✅ **Incremental Development**
 - Start with the simplest test case
@@ -471,7 +471,7 @@ public class MyTest {
 
 ---
 
-## Version Control Best Practices
+## Version Control Practices
 
 ### Reverting Failed Experiments
 
@@ -514,7 +514,7 @@ rm docs/postgresql-integration-testing.md
 - Feature attempts that prove too complex or incompatible
 - Any situation where you want to "start over" from a clean state
 
-#### ✅ **Best Practice**
+#### ✅ **Practice**
 - Commit frequently at good checkpoints
 - Use descriptive commit messages to identify good states
 - Before major experiments, create a branch (can delete if it fails)
@@ -568,7 +568,7 @@ public class PropertySourceDebugHook {
 - Error handling code
 - Comments that explain non-obvious logic
 
-#### ✅ **Best Practice**
+#### ✅ **Practice**
 - Use proper logging frameworks for production code (SLF4J, Log4j, etc.)
 - Use debuggers or IDE breakpoints during development instead of print statements
 - If you must add debug code, add a TODO comment to remind yourself to remove it
