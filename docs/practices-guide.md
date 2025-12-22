@@ -219,16 +219,13 @@ And the transaction should have a timestamp showing when it was created
 
 ### 5. Business Language Guidelines
 
+**Note**: This section provides specific examples of business language. The core principles are covered in [Problem Space vs Solution Space](#1-problem-space-vs-solution-space) and [Black Box vs White Box](#2-black-box-vs-white-box).
+
 #### ✅ **Use Business Terms**
 - "record a business expense" (not "send POST request")
 - "transaction should be recorded in the ledger" (not "persist to database")
 - "unique identifier" (not "UUID")
 - "timestamp showing when it was created" (not "current timestamp")
-
-#### ✅ **Focus on Outcomes**
-- What the business gets
-- What the user experiences
-- What value is delivered
 
 ### 6. TODO Comments in Step Definitions
 
@@ -276,10 +273,14 @@ public void i_provide_an_idempotency_key(String key) {
 
 ## Test-Driven Development (TDD)
 
-### 1. The Red-Green-Refactor Cycle
+**Note on Project Context**: In this project, test-accompanied development was used rather than strict TDD. Tests and implementation were written together as a tight pair, with test intent defined before implementation was complete. This pattern works well with AI-assisted development, where AI can generate code that often satisfies the test intent on the first try. The core principle remains: define expected behavior in the test before writing the implementation that satisfies it.
 
-#### ✅ **Correct Approach**
+### 1. Classic TDD: The Red-Green-Refactor Cycle
+
+#### ✅ **Strict TDD Approach**
 1. **Red**: Write a failing test first
+   - Write the test
+   - **Run the test to see it fail** (critical step - verify it fails for the right reason)
    - Test should fail for the right reason (missing functionality, not compilation error)
    - Test should be specific and focused on one behavior
 2. **Green**: Write minimal code to make the test pass
@@ -288,6 +289,28 @@ public void i_provide_an_idempotency_key(String key) {
 3. **Refactor**: Improve code quality while keeping tests green
    - Clean up code, remove duplication, improve naming
    - Ensure all tests still pass
+
+### 2. Test-Accompanied Development (Used in This Project)
+
+#### ✅ **Test-Accompanied Development Approach**
+A workflow where tests and implementation are written in close pairing, with the intent and acceptance criteria established in the test before implementation, but without requiring a failed test run before writing production code.
+
+**Core Rule (Non-Negotiable)**: The test must be written before the implementation that satisfies it, behavior must be verified by running the test, and test intent must be clearly expressed.
+
+**Why This Works with AI-Assisted Development**:
+- AI can quickly generate minimal code that satisfies a specified test intent
+- The cost of "red first" is higher than its cognitive benefit in many modern environments
+- You still define expected behavior before writing implementation code
+- The test still constrains the implementation
+- You still verify correctness with the test
+
+**Risks and Mitigations**:
+- **Risk**: You may not see false negatives early (typo in test may be hidden)
+- **Mitigation**: Run tests frequently, especially after AI-generated code
+- **Risk**: Testing feedback is delayed if you batch changes
+- **Mitigation**: Run tests after each small batch of changes
+- **Risk**: You might get false confidence if AI code looks right but doesn't satisfy intended behavior
+- **Mitigation**: Always verify tests pass and check that they test the right behavior
 
 #### ❌ **Anti-Pattern**
 ```java
@@ -298,31 +321,51 @@ public class MyService {
         // Then tests written to match
     }
 }
-```
 
-#### ✅ **Correct Pattern**
-```java
-// CORRECT: Test first, then implementation
+// WRONG: Writing test after implementation is complete
+// Test should define behavior before implementation
+public String doSomething() {
+    return "expected";  // Implementation written first
+}
 @Test
 public void shouldDoSomething() {
-    // Test written first - will fail
+    // Test written after - wrong order
     MyService service = new MyService();
     String result = service.doSomething();
     assertEquals("expected", result);
 }
+```
 
-// Then implement just enough to pass:
+#### ✅ **Strict TDD Pattern**
+Strict TDD differs only in timing:
+- After writing the test, run it to verify it fails for the right reason.
+- Then implement the minimal code and re-run to verify it passes.
+
+#### ✅ **Test-Accompanied Development Pattern (Used in This Project)**
+```java
+// CORRECT: Test intent defined first, then implementation written to satisfy it
+@Test
+public void shouldDoSomething() {
+    // Test written first - defines expected behavior clearly
+    MyService service = new MyService();
+    String result = service.doSomething();
+    assertEquals("expected", result);
+}
+// Implementation written to satisfy the test intent:
 public String doSomething() {
     return "expected";  // Minimal implementation
 }
+// Run test to verify it passes and behavior is correct
 ```
 
-### 2. One Test at a Time
+### 3. One Test at a Time
 
 #### ✅ **Correct Approach**
-- Write one failing test
-- Make it pass
-- Refactor if needed
+- Write one test (or test + implementation pair)
+- **For strict TDD**: Run the test to see it fail, then implement
+- **For test-accompanied**: Write test and implementation together, then run to verify
+- Make it pass (or verify it passes)
+- Refactor if needed (see [When to Refactor](#6-tdd-workflow-practices))
 - Move to the next test
 - Don't write multiple tests before implementing
 
@@ -340,38 +383,53 @@ public String doSomething() {
 // CORRECT: One test at a time
 @Test
 public void shouldHandleFirstCase() {
-    // Write test, implement, verify
+    // Write test, define behavior, implement, verify it passes
 }
 
 // After first test passes:
 @Test
 public void shouldHandleSecondCase() {
-    // Write next test, implement, verify
+    // Write next test, define behavior, implement, verify it passes
 }
 ```
 
-### 3. Communicating TDD Intent
+### 4. Communicating TDD Intent
 
 #### ✅ **How to Request TDD Workflow**
 
 When requesting features, explicitly state:
 - "I want to follow TDD for this feature"
-- "Write the first failing test for [specific behavior]. Don't implement the code yet."
-- "Now make that test pass by implementing the minimal code needed."
-- "One test at a time, please"
+- "Write the first test for [specific behavior]. Define the expected behavior clearly."
+- "For strict TDD: Run it to see it fail. Don't implement the code yet."
+- "For test-accompanied: Write the test and implementation together, then run to verify."
+- "One test at a time, please" (see [One Test at a Time](#3-one-test-at-a-time))
 
-#### ✅ **Example Request Pattern**
+#### ✅ **Example Request Pattern (Strict TDD)**
 ```
-"I want to add [feature] using TDD:
+"I want to add [feature] using strict TDD:
 
 1. First, write a failing test for [specific behavior]
-2. Then implement just enough code to make it pass
-3. Then we'll move to the next test
+2. Run the test to see it fail (verify it fails for the right reason)
+3. Then implement just enough code to make it pass
+4. Run the test again to verify it passes
+5. Then we'll move to the next test
 
 Let's start with test #1: [describe the first test case]"
 ```
 
-### 4. Test Quality in TDD
+#### ✅ **Example Request Pattern (Test-Accompanied Development)**
+```
+"I want to add [feature] using test-accompanied development:
+
+1. First, write a test for [specific behavior] that clearly defines expected behavior
+2. Write the implementation to satisfy the test intent
+3. Run the test to verify it passes and behavior is correct
+4. Then we'll move to the next test
+
+Let's start with test #1: [describe the first test case]"
+```
+
+### 5. Test Quality in TDD
 
 #### ✅ **Good TDD Tests**
 - **Specific**: Test one behavior at a time
@@ -394,7 +452,7 @@ public void shouldReturnEmptyOptionalWhenIdempotencyKeyNotFound() {
 }
 ```
 
-### 5. TDD Workflow Practices
+### 6. TDD Workflow Practices
 
 #### ✅ **Incremental Development**
 - Start with the simplest test case
@@ -413,7 +471,7 @@ public void shouldReturnEmptyOptionalWhenIdempotencyKeyNotFound() {
 - If tests are failing (red phase)
 - If you're unsure about the design direction
 
-### 6. TDD and Integration Tests
+### 7. TDD and Integration Tests
 
 #### ✅ **Correct Approach**
 - Use TDD for unit tests (fast feedback)
@@ -425,7 +483,7 @@ public void shouldReturnEmptyOptionalWhenIdempotencyKeyNotFound() {
 2. **Integration Tests**: Test component interactions
 3. **BDD Scenarios**: Test end-to-end behavior from user perspective
 
-### 7. Testing Framework: JUnit 4
+### 8. Testing Framework: JUnit 4
 
 #### ✅ **Correct Approach**
 - **Use JUnit 4** for all tests in this project
@@ -595,43 +653,44 @@ public class PropertySourceDebugHook {
 5. **White box testing language** → Use black box approach
 
 ### TDD
-1. **Writing implementation before tests** → Always write failing test first
-2. **Writing multiple tests before implementing** → One test at a time
-3. **Skipping the refactor phase** → Clean up code after tests pass
-4. **Writing tests that don't fail first** → Tests should fail for the right reason
-5. **Implementing more than needed** → Write minimal code to pass the test
-6. **Using JUnit 5** → Use JUnit 4 (required for Cucumber compatibility)
-7. **Missing @RunWith annotation** → Always use `@RunWith(SpringRunner.class)` for Spring Boot tests
+1. **Writing implementation before tests** → Always write test before implementation
+2. **Writing test after implementation is complete** → Test should define behavior before implementation
+3. **Writing multiple tests before implementing** → One test at a time
+4. **Skipping the refactor phase** → Clean up code after tests pass
+5. **Not running tests to verify behavior** → Always run tests to verify they pass and test the right behavior
+6. **Implementing more than needed** → Write minimal code to pass the test
+7. **Using JUnit 5** → Use JUnit 4 (required for Cucumber compatibility)
+8. **Missing @RunWith annotation** → Always use `@RunWith(SpringRunner.class)` for Spring Boot tests
 
 ---
 
 ## Quality Checklist
 
 ### Use Case Specifications
-- [ ] Preconditions contain only system operational requirements
-- [ ] Basic flow is clean and linear without conditional logic
-- [ ] Alternative flows have clear triggers with step references
-- [ ] Exception flows contain only execution exceptions
-- [ ] No redundant information with other documentation
+- [ ] Preconditions contain only system operational requirements (see [Preconditions vs Runtime Validation](#1-preconditions-vs-runtime-validation))
+- [ ] Basic flow is clean and linear without conditional logic (see [Clean Basic Flows](#2-clean-basic-flows))
+- [ ] Alternative flows have clear triggers with step references (see [Alternative Flow Triggers](#3-alternative-flow-triggers))
+- [ ] Exception flows contain only execution exceptions (see [Exception Flows vs Alternative Flows](#4-exception-flows-vs-alternative-flows))
+- [ ] No redundant information with other documentation (see [DRY](#3-dry-dont-repeat-yourself))
 
 ### BDD Scenarios
-- [ ] Written in problem space (business intent)
-- [ ] Use black box language (outcomes, not implementation)
-- [ ] Follow DRY principle (reference, don't repeat)
-- [ ] Use business language stakeholders understand
-- [ ] Focus on what the business gets, not how it's delivered
-- [ ] TODO comments removed once step definition methods are implemented
+- [ ] Written in problem space (see [Problem Space vs Solution Space](#1-problem-space-vs-solution-space))
+- [ ] Use black box language (see [Black Box vs White Box](#2-black-box-vs-white-box))
+- [ ] Follow DRY principle (see [DRY](#3-dry-dont-repeat-yourself))
+- [ ] Use business language (see [Business Language Guidelines](#5-business-language-guidelines))
+- [ ] TODO comments removed once step definition methods are implemented (see [TODO Comments in Step Definitions](#6-todo-comments-in-step-definitions))
 
 ### TDD
-- [ ] Write failing test first (Red phase)
-- [ ] Implement minimal code to pass (Green phase)
-- [ ] Refactor after test passes (Refactor phase)
-- [ ] One test at a time workflow
-- [ ] Tests are specific, focused, and readable
-- [ ] Test names clearly describe expected behavior
-- [ ] Use JUnit 4 (not JUnit 5) for Cucumber compatibility
-- [ ] Test classes use `@RunWith(SpringRunner.class)` for Spring Boot tests
-- [ ] Test methods are `public void` (JUnit 4 syntax)
+- [ ] Test intent defined before implementation (core principle - see [Test-Accompanied Development](#2-test-accompanied-development-used-in-this-project))
+- [ ] Test clearly expresses expected behavior
+- [ ] Implementation satisfies the test intent
+- [ ] Test is run to verify it passes and behavior is correct
+- [ ] For strict TDD: Run test to see it fail before implementing
+- [ ] For test-accompanied: Test and implementation written together, then verified
+- [ ] Refactor after test passes (see [When to Refactor](#6-tdd-workflow-practices))
+- [ ] One test at a time workflow (see [One Test at a Time](#3-one-test-at-a-time))
+- [ ] Tests meet quality criteria (see [Test Quality in TDD](#5-test-quality-in-tdd))
+- [ ] Use JUnit 4 (not JUnit 5) - see [Testing Framework: JUnit 4](#8-testing-framework-junit-4)
 
 ---
 
