@@ -441,3 +441,4 @@ All use cases follow consistent error handling patterns:
 - **Idempotency Key Format**: Must be a universally unique identifier (UUID) in standard format (e.g., "550e8400-e29b-41d4-a716-446655440000")
 - **Idempotency Key Validity**: Idempotency keys and their cached responses remain valid for 24 hours from creation
 - **Response Caching**: Only successful transaction creations (status indicating success) are cached for idempotency; error responses are not cached, allowing retries
+
