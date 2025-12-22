@@ -6,7 +6,7 @@ This document describes the system's behavior from a business perspective, focus
 
 **Note on Project Context**: In this project, use case specifications were reverse engineered from existing code and observed behavior after implementation. They normalize terminology, document flows consistently, and capture exception handling patterns.
 
-> **Visual Representation**: An activity diagram showing the basic flow and all alternative flows for UC-001 (Create Transaction) is available at [use-case-creation-activity.mmd](../diagrams/use-case-creation-activity.mmd). This diagram visualizes the decision points and flow paths described in the use case specifications below.
+> **Visual Representation**: An activity diagram showing the basic flow and all alternative flows for UC-001 (Create Transaction) is available at [use-case-creation-activity.mmd](diagrams/use-case-creation-activity.mmd). This diagram visualizes the decision points and flow paths described in the use case specifications below.
 
 ---
 
