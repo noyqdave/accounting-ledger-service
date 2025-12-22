@@ -1,7 +1,9 @@
 # Practices Guide: Use Case Specifications & BDD
 
 ## Overview
-This guide captures practices for writing use case specifications and BDD scenarios, derived from real project experience and industry standards.
+This guide captures practices for expressing, constraining, and documenting system behavior using use case specifications, BDD scenarios, and tests. These practices were refined in a real project where AI-assisted development required executable intent and strong behavioral guardrails.
+
+Without executable intent (BDD scenarios and tests), AI-generated code quickly drifts into implementation detail and unintended behavior.
 
 ### How These Practices Were Applied in This Project
 In this project, the development workflow followed a specific sequence:
@@ -15,7 +17,7 @@ The practices below reflect both forward-looking guidance (for BDD scenarios tha
 
 ## Use Case Specifications
 
-**Note on Project Context**: In this project, use case specifications were reverse engineered from existing code and observed behavior after implementation. They normalize terminology, document flows consistently, and capture exception handling patterns. The practices below reflect the reverse engineering process: clarity and proper separation of concerns were essential for creating accurate documentation from working code.
+**Note on Project Context**: In this project, use case specifications were reverse engineered from existing code and observed behavior after implementation. They normalize terminology, document flows consistently, and capture exception handling patterns. The practices below reflect the discipline required to derive clear, accurate documentation from working code.
 
 ### 1. Preconditions vs Runtime Validation
 
