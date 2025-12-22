@@ -442,3 +442,4 @@ All use cases follow consistent error handling patterns:
 - **Idempotency Key Validity**: Idempotency keys and their cached responses remain valid for 24 hours from creation
 - **Response Caching**: Only successful transaction creations (status indicating success) are cached for idempotency; error responses are not cached, allowing retries
 
+
