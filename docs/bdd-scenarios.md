@@ -1,7 +1,7 @@
 # BDD Acceptance Test Scenarios - Create Transaction
 
 ## Overview
-These BDD scenarios are derived from UC-001: Create Transaction use case, covering both the basic flow (happy path) and key alternative flows.
+These BDD scenarios were written as executable acceptance tests that drove incremental development for transaction creation. They cover both the basic flow (happy path) and key alternative flows. The scenarios were written before implementation to constrain AI-generated code and ensure implementations matched business requirements.
 
 ## Feature: Create Transaction
 

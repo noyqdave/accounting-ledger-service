@@ -5,23 +5,23 @@
 ### Overview
 **Actor**: External System/User  
 **Goal**: Record a new expense transaction in the ledger  
-**Precondition**: Feature flag "create-transaction" is enabled
+**Precondition**: System is operational and available
 
 ### Detailed Flow
 
 ![Transaction Creation Sequence](diagrams/use-case-creation.mmd)
 
 ### Success Criteria
-- Transaction is created with valid UUID
+- Transaction is created with a unique identifier
 - Amount and description are preserved
-- Timestamp is set to current time
-- Transaction type is correctly set to EXPENSE
-- HTTP 200 response with created transaction
+- Timestamp shows when the transaction was created
+- Transaction type is correctly set to expense
+- User receives confirmation with created transaction details
 
 ### Error Scenarios
-- **Invalid Amount**: HTTP 400 if amount ≤ 0
-- **Empty Description**: HTTP 400 if description is null/empty
-- **Feature Disabled**: HTTP 403 if feature flag is disabled
+- **Invalid Amount**: Transaction is not created if amount is zero or negative
+- **Empty Description**: Transaction is not created if description is missing or empty
+- **Feature Disabled**: Transaction creation is unavailable if the feature is disabled
 
 ---
 
@@ -30,7 +30,7 @@
 ### Overview
 **Actor**: External System/User  
 **Goal**: Get complete list of all transactions in the ledger  
-**Precondition**: Feature flag "get-all-transactions" is enabled
+**Precondition**: System is operational and available
 
 ### Detailed Flow
 
@@ -39,37 +39,36 @@
 ### Success Criteria
 - All transactions are returned
 - Response format is consistent
-- HTTP 200 status code
+- User receives the complete list of transactions
 - Empty list returned if no transactions exist
 
 ### Error Scenarios
-- **Feature Disabled**: HTTP 403 if feature flag is disabled
-- **Database Error**: HTTP 500 if database is unavailable
+- **Feature Disabled**: Transaction retrieval is unavailable if the feature is disabled
+- **System Error**: Transaction retrieval fails if the system encounters an error
 
 ---
 
-## Scenario 3: Feature Flag Disabled
+## Scenario 3: Feature Unavailable
 
 ### Overview
 **Actor**: External System/User  
 **Goal**: Attempt to use a disabled feature  
-**Precondition**: Feature flag is disabled in configuration
+**Precondition**: System is operational and available
 
 ### Detailed Flow
 
-When a feature flag is disabled:
-1. HTTP request arrives at FeatureFlagFilter
-2. Filter checks feature flag via FeatureFlagService
-3. FeatureFlagService reads from application.yml configuration
-4. If disabled, FeatureFlagFilter returns HTTP 403 Forbidden with JSON error
-5. Request never reaches the controller
+When a feature is unavailable:
+1. User attempts to use the feature
+2. System checks whether the feature is currently available
+3. System determines the feature is not available
+4. System indicates the requested feature is unavailable
+5. System returns an error message explaining the feature is disabled
 
 ### Success Criteria
-- Request is properly rejected at filter level
-- HTTP 403 Forbidden status
-- Clear error message: `{"error": "Feature is disabled"}`
-- No business logic execution
-- No controller method invocation
+- Request is properly rejected
+- User receives clear error message that the feature is disabled
+- No business logic execution occurs
+- No transaction processing takes place
 
 ---
 
@@ -78,7 +77,7 @@ When a feature flag is disabled:
 ### Overview
 **Actor**: External System/User  
 **Goal**: Attempt to create transaction with invalid data  
-**Precondition**: Feature flag is enabled
+**Precondition**: System is operational and available
 
 ### Detailed Flow
 
@@ -86,8 +85,7 @@ When a feature flag is disabled:
 
 ### Success Criteria
 - Validation errors are caught
-- HTTP 400 Bad Request status
-- Clear error message indicating validation failure
+- User receives clear error message indicating validation failure
 - No transaction is created
 
 ---
@@ -104,9 +102,9 @@ When a feature flag is disabled:
 ![Health Check Sequence](diagrams/use-case-health-check.mmd)
 
 ### Success Criteria
-- Health endpoint responds with HTTP 200
-- Status indicates "UP"
-- Database connectivity is verified
+- Health check request is processed
+- Status indicates system is operational
+- Data storage connectivity is verified
 - Response includes component health details
 
 ---
@@ -119,14 +117,13 @@ All business operations automatically track metrics:
 - `transactions.fetched`: Counter for retrieved transactions
 - `http.server.requests`: HTTP request metrics (Spring Boot default)
 
-### Feature Flag Management
-- Runtime configuration via `application.yml`
-- Filter-based enforcement via `FeatureFlagFilter` at HTTP layer
-- Endpoint-to-feature-flag mappings configurable in `application.yml`
-- Graceful degradation when features are disabled (returns 403 with JSON error)
+### Feature Availability Management
+- Runtime configuration controls feature availability
+- Features can be enabled or disabled without code changes
+- Graceful degradation when features are disabled (returns error message explaining feature is unavailable)
 
 ### Error Handling
 - Global exception handler for consistent error responses
-- Validation errors return HTTP 400
-- Feature flag errors return HTTP 403
-- System errors return HTTP 500
+- Validation errors return detailed error messages
+- Feature availability errors return explanation that feature is disabled
+- System errors return generic error messages

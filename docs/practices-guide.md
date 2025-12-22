@@ -636,6 +636,6 @@ public class PropertySourceDebugHook {
 ---
 
 ## References
-- Use case specifications should reference: [Use Case Specifications](use-case-specifications.md)
-- BDD scenarios should reference: [BDD Scenarios](bdd-scenarios.md)
+- Use case specifications: [Use Case Specifications](use-case-specifications.md)
+- BDD scenarios: [BDD Scenarios](bdd-scenarios.md)
 - Architecture documentation: [Architecture Overview](ARCHITECTURE.md)
