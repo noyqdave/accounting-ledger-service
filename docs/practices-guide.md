@@ -1,4 +1,4 @@
-# Practices Guide: Use Case Specifications & BDD
+# Practices Guide: User Stories, BDD/TDD, Version Control and Use Case Specifications
 
 ## Overview
 This guide captures practices for expressing, constraining, and documenting system behavior using use case specifications, BDD scenarios, and tests. These practices were refined in a real project where AI-assisted development required executable intent and strong behavioral guardrails.
