@@ -15,97 +15,6 @@ The practices below reflect both forward-looking guidance (for BDD scenarios tha
 
 ---
 
-## Use Case Specifications
-
-**Note on Project Context**: The practices below reflect the discipline required to derive clear, accurate documentation from working code.
-
-### 1. Preconditions vs Runtime Validation
-
-#### ✅ **Correct Approach**
-- **Preconditions**: Only system operational requirements
-  - "System is operational and database is accessible"
-  - "Application server is running"
-- **Runtime Validation**: Feature flags, input validation, business rules
-  - Checked in basic flow steps
-  - Trigger alternative flows when conditions fail
-
-#### ❌ **Anti-Pattern**
-```markdown
-- **Preconditions**: 
-  - Feature flag "create-transaction" is enabled  # WRONG - this is runtime validation
-  - System is operational
-```
-
-#### ✅ **Correct Pattern**
-```markdown
-- **Preconditions**: 
-  - System is operational and database is accessible  # CORRECT - system requirement
-```
-
-### 2. Clean Basic Flows
-
-#### ✅ **Correct Approach**
-- Describe only the happy path
-- Linear progression without conditional logic
-- No branching statements
-
-#### ❌ **Anti-Pattern**
-```markdown
-2. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled. If enabled, processing continues to step 3. If disabled, the system follows alternative flow A1.
-```
-
-#### ✅ **Correct Pattern**
-```markdown
-2. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled.
-```
-
-### 3. Alternative Flow Triggers
-
-#### ✅ **Correct Approach**
-- Alternative flows contain their own trigger descriptions
-- Specific step references
-- Clear condition descriptions
-
-#### ✅ **Correct Pattern**
-```markdown
-#### A1: Feature Flag Disabled
-- **Trigger**: In step 3, the "create-transaction" feature flag is disabled
-- **Steps**:
-  1. System checks feature flag and determines it is disabled
-  2. System throws FeatureFlagDisabledException
-  3. Global exception handler catches the exception
-  4. System returns HTTP 403 Forbidden with error message
-```
-
-### 4. Exception Flows vs Alternative Flows
-
-#### ✅ **Correct Approach**
-- **Alternative Flows**: Specific validation failures or business logic exceptions during execution
-- **Exception Flows**: Only actual exceptions that occur during execution
-- **Precondition Failures**: Not included in use case (system unavailable, etc.)
-
-#### ❌ **Anti-Pattern**
-```markdown
-### Exception Flows
-- **System Unavailable**: If the application server is down, the request will fail with connection error
-```
-
-#### ✅ **Correct Pattern**
-```markdown
-### Exception Flows
-- **Database Connection Lost**: If database connection fails during transaction persistence
-```
-
-### 5. Logical Separation of Concerns
-
-#### ✅ **Correct Structure**
-- **Preconditions**: What must be true before use case starts
-- **Basic Flow**: Clean, linear happy path
-- **Alternative Flows**: Specific failure scenarios with clear triggers
-- **Exception Flows**: Only execution exceptions
-
----
-
 ## BDD (Behavior-Driven Development)
 
 **Note on Project Context**: The problem space approach and business language guidelines prevented AI from generating overly technical implementations.
@@ -634,6 +543,97 @@ public class PropertySourceDebugHook {
 - If you must add debug code, add a TODO comment to remind yourself to remove it
 - Run all tests after removing debug code to ensure nothing breaks
 - Commit debug code removal in a separate commit with a clear message
+
+---
+
+## Use Case Specifications
+
+**Note on Project Context**: The practices below reflect the discipline required to derive clear, accurate documentation from working code.
+
+### 1. Preconditions vs Runtime Validation
+
+#### ✅ **Correct Approach**
+- **Preconditions**: Only system operational requirements
+  - "System is operational and database is accessible"
+  - "Application server is running"
+- **Runtime Validation**: Feature flags, input validation, business rules
+  - Checked in basic flow steps
+  - Trigger alternative flows when conditions fail
+
+#### ❌ **Anti-Pattern**
+```markdown
+- **Preconditions**: 
+  - Feature flag "create-transaction" is enabled  # WRONG - this is runtime validation
+  - System is operational
+```
+
+#### ✅ **Correct Pattern**
+```markdown
+- **Preconditions**: 
+  - System is operational and database is accessible  # CORRECT - system requirement
+```
+
+### 2. Clean Basic Flows
+
+#### ✅ **Correct Approach**
+- Describe only the happy path
+- Linear progression without conditional logic
+- No branching statements
+
+#### ❌ **Anti-Pattern**
+```markdown
+2. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled. If enabled, processing continues to step 3. If disabled, the system follows alternative flow A1.
+```
+
+#### ✅ **Correct Pattern**
+```markdown
+2. **System validates feature flag**: The system checks if the "create-transaction" feature flag is enabled.
+```
+
+### 3. Alternative Flow Triggers
+
+#### ✅ **Correct Approach**
+- Alternative flows contain their own trigger descriptions
+- Specific step references
+- Clear condition descriptions
+
+#### ✅ **Correct Pattern**
+```markdown
+#### A1: Feature Flag Disabled
+- **Trigger**: In step 3, the "create-transaction" feature flag is disabled
+- **Steps**:
+  1. System checks feature flag and determines it is disabled
+  2. System throws FeatureFlagDisabledException
+  3. Global exception handler catches the exception
+  4. System returns HTTP 403 Forbidden with error message
+```
+
+### 4. Exception Flows vs Alternative Flows
+
+#### ✅ **Correct Approach**
+- **Alternative Flows**: Specific validation failures or business logic exceptions during execution
+- **Exception Flows**: Only actual exceptions that occur during execution
+- **Precondition Failures**: Not included in use case (system unavailable, etc.)
+
+#### ❌ **Anti-Pattern**
+```markdown
+### Exception Flows
+- **System Unavailable**: If the application server is down, the request will fail with connection error
+```
+
+#### ✅ **Correct Pattern**
+```markdown
+### Exception Flows
+- **Database Connection Lost**: If database connection fails during transaction persistence
+```
+
+### 5. Logical Separation of Concerns
+
+#### ✅ **Correct Structure**
+- **Preconditions**: What must be true before use case starts
+- **Basic Flow**: Clean, linear happy path
+- **Alternative Flows**: Specific failure scenarios with clear triggers
+- **Exception Flows**: Only execution exceptions
 
 ---
 
